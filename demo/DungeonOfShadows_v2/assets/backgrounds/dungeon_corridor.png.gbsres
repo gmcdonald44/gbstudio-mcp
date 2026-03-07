@@ -1,0 +1,13 @@
+{
+  "_resourceType": "background",
+  "id": "af937bf4-b5b8-4bb1-9b6b-c9b5a3513cb5",
+  "name": "dungeon_corridor",
+  "symbol": "bg_dungeon_corridor",
+  "filename": "dungeon_corridor.png",
+  "width": 20,
+  "height": 18,
+  "imageWidth": 160,
+  "imageHeight": 144,
+  "tileColors": "",
+  "autoColor": false
+}

@@ -1,106 +1,113 @@
-# GB Studio Project Format
+# GB Studio 4.2.2 Project Format
 
-Technical reference for the `.gbsproj` file format used by GB Studio and this MCP server.
+## Split-Resource Format
 
-## Overview
+GB Studio 4.2.2 uses a **split-resource format** where project data is stored across multiple `.gbsres` files rather than a single monolithic `.gbsproj` file.
 
-A `.gbsproj` file is a single JSON file containing the entire game project: scenes, actors, triggers, scripts, variables, asset references, and settings. This MCP server reads and writes this format directly.
+### Project Structure
 
-## Root Structure
+```
+MyProject/
+├── MyProject.gbsproj          # Root metadata only
+├── assets/
+│   ├── backgrounds/
+│   │   ├── cave.png           # Image file
+│   │   └── cave.png.gbsres   # Background metadata
+│   ├── sprites/
+│   │   ├── player.png
+│   │   └── player.png.gbsres
+│   ├── music/
+│   ├── sounds/
+│   ├── fonts/
+│   ├── emotes/
+│   ├── avatars/
+│   ├── tilesets/
+│   └── ui/
+├── project/
+│   ├── settings.gbsres
+│   ├── variables.gbsres
+│   ├── engine_field_values.gbsres
+│   ├── palettes/
+│   │   ├── default_bg_1.gbsres
+│   │   └── ...
+│   └── scenes/
+│       └── my_scene/
+│           ├── scene.gbsres
+│           ├── actors/
+│           │   └── guard.gbsres
+│           └── triggers/
+│               └── door.gbsres
+└── plugins/
+```
+
+### Root File (.gbsproj)
 
 ```json
 {
-  "_v": 21,
-  "name": "MyRPG",
-  "author": "Grant",
+  "_resourceType": "project",
+  "name": "MyProject",
+  "author": "Author",
   "notes": "",
-  "scenes": [],
-  "backgrounds": [],
-  "spriteSheets": [],
-  "palettes": [],
-  "music": [],
-  "variables": [],
-  "settings": {}
+  "_version": "4.2.0",
+  "_release": "10"
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `_v` | number | Format version (this server uses 21) |
-| `name` | string | Project name |
-| `author` | string | Author name |
-| `notes` | string | Free-form notes |
-| `scenes` | Scene[] | All game scenes |
-| `backgrounds` | Background[] | Background image assets |
-| `spriteSheets` | SpriteSheet[] | Sprite sheet assets |
-| `palettes` | Palette[] | Color palettes |
-| `music` | Music[] | Music track assets |
-| `variables` | Variable[] | Global game variables |
-| `settings` | object | Project settings |
-
-## UUID System
-
-Every entity (scene, actor, trigger, variable, background, sprite, palette, script event) has a unique `id` field containing a UUID v4 string (e.g. `"a1b2c3d4-e5f6-7890-abcd-ef1234567890"`).
-
-References between entities use these UUIDs. For example:
-- A scene's `backgroundId` references a background's `id`
-- An actor's `spriteSheetId` references a sprite sheet's `id`
-- An `EVENT_SWITCH_SCENE` command's `args.sceneId` references a scene's `id`
-- An `EVENT_IF_TRUE` command's `args.variable` references a variable's `id`
-
-## Scene Structure
+### Scene (.gbsres)
 
 ```json
 {
+  "_resourceType": "scene",
   "id": "uuid",
-  "name": "Town Square",
-  "backgroundId": "bg-uuid",
+  "_index": 0,
+  "type": "TOPDOWN",
+  "name": "Cave",
+  "symbol": "scene_cave",
   "x": 0,
   "y": 0,
   "width": 20,
   "height": 18,
-  "type": "0",
-  "actors": [],
-  "triggers": [],
-  "collisions": [],
+  "backgroundId": "bg-uuid",
+  "tilesetId": "",
+  "colorModeOverride": "none",
+  "paletteIds": [],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
   "script": [],
   "playerHit1Script": [],
   "playerHit2Script": [],
-  "playerHit3Script": []
+  "playerHit3Script": [],
+  "collisions": ""
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique UUID |
-| `name` | string | Display name |
-| `backgroundId` | string | UUID of the background asset |
-| `x`, `y` | number | Position in the GB Studio world editor (pixels, for layout only) |
-| `width`, `height` | number | Scene dimensions in tiles (1 tile = 8×8 pixels) |
-| `type` | string | Scene type ("0" = default top-down) |
-| `actors` | Actor[] | Actors placed in this scene |
-| `triggers` | Trigger[] | Trigger zones in this scene |
-| `collisions` | number[] | Collision tile data array |
-| `script` | ScriptEvent[] | Scene initialization script |
-| `playerHit1Script` | ScriptEvent[] | Player collision script (slot 1) |
-| `playerHit2Script` | ScriptEvent[] | Player collision script (slot 2) |
-| `playerHit3Script` | ScriptEvent[] | Player collision script (slot 3) |
+**Scene types:** `TOPDOWN`, `PLATFORM`, `ADVENTURE`, `SHMUP`, `POINTNCLICK`, `LOGO`
 
-**Standard Game Boy screen:** 160×144 pixels = 20×18 tiles. Scenes can be larger for scrolling.
-
-## Actor Structure
+### Actor (.gbsres)
 
 ```json
 {
+  "_resourceType": "actor",
   "id": "uuid",
-  "name": "Shopkeeper",
+  "_index": 0,
+  "symbol": "actor_guard",
+  "prefabId": "",
+  "name": "Guard",
+  "coordinateType": "tiles",
   "x": 5,
-  "y": 8,
+  "y": 3,
+  "frame": 0,
+  "animate": false,
   "spriteSheetId": "sprite-uuid",
-  "spriteType": "STATIC",
+  "paletteId": "",
   "direction": "down",
   "moveSpeed": 1,
-  "animSpeed": 3,
+  "animSpeed": 15,
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
   "script": [],
   "startScript": [],
   "updateScript": [],
@@ -110,141 +117,100 @@ References between entities use these UUIDs. For example:
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique UUID |
-| `name` | string | Display name |
-| `x`, `y` | number | Position in tiles within the scene |
-| `spriteSheetId` | string | UUID of the sprite sheet asset |
-| `spriteType` | string | `"STATIC"` (no animation), `"ACTOR"` (4-direction), `"ACTOR_ANIMATED"` (animated) |
-| `direction` | string | `"down"`, `"up"`, `"left"`, `"right"` |
-| `moveSpeed` | number | Movement speed (1-4) |
-| `animSpeed` | number | Animation speed (1-4) |
-| `script` | ScriptEvent[] | **Interact** — runs when player presses A facing this actor |
-| `startScript` | ScriptEvent[] | **On scene load** — runs when scene starts |
-| `updateScript` | ScriptEvent[] | **Every frame** — runs continuously |
-| `hit1Script` | ScriptEvent[] | Collision handler 1 |
-| `hit2Script` | ScriptEvent[] | Collision handler 2 |
-| `hit3Script` | ScriptEvent[] | Collision handler 3 |
-
-## Trigger Structure
+### Trigger (.gbsres)
 
 ```json
 {
+  "_resourceType": "trigger",
   "id": "uuid",
-  "name": "Door to Forest",
-  "x": 10,
-  "y": 15,
+  "_index": 0,
+  "symbol": "trigger_door",
+  "prefabId": "",
+  "name": "Door",
+  "x": 1,
+  "y": 1,
   "width": 2,
   "height": 1,
+  "prefabScriptOverrides": {},
   "script": [],
   "leaveScript": []
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique UUID |
-| `name` | string | Display name |
-| `x`, `y` | number | Top-left position in tiles |
-| `width`, `height` | number | Size in tiles |
-| `script` | ScriptEvent[] | **On enter** — runs when player walks into the zone |
-| `leaveScript` | ScriptEvent[] | **On leave** — runs when player walks out of the zone |
-
-## Variable Structure
+### Background (.png.gbsres)
 
 ```json
 {
+  "_resourceType": "background",
   "id": "uuid",
-  "name": "hasSword"
-}
-```
-
-Variables are global. They can be boolean flags or numeric values, depending on which script events operate on them.
-
-## Background Asset
-
-```json
-{
-  "id": "uuid",
-  "name": "Default Background",
-  "filename": "default.png",
+  "name": "cave",
+  "symbol": "bg_cave",
+  "filename": "cave.png",
   "width": 20,
   "height": 18,
   "imageWidth": 160,
-  "imageHeight": 144
+  "imageHeight": 144,
+  "tileColors": "",
+  "autoColor": false
 }
 ```
 
-The `filename` is relative to the project's `assets/backgrounds/` directory. The actual PNG file must exist there for GB Studio to render it. This MCP server creates stub entries; you add the real PNG files via GB Studio's asset manager.
-
-**Constraints:** Background images must use colors from the assigned palette (4 colors max per 8×8 tile).
-
-## Sprite Sheet Asset
+### Sprite (.png.gbsres)
 
 ```json
 {
+  "_resourceType": "sprite",
   "id": "uuid",
-  "name": "Default Sprite",
-  "filename": "default_sprite.png",
-  "numFrames": 1
+  "name": "player",
+  "symbol": "sprite_player",
+  "states": [{
+    "id": "uuid",
+    "name": "",
+    "animationType": "multi_movement",
+    "flipLeft": true,
+    "animations": [{
+      "id": "uuid",
+      "frames": [{
+        "id": "uuid",
+        "tiles": [{
+          "id": "uuid",
+          "x": 0, "y": 0,
+          "sliceX": 0, "sliceY": 0,
+          "flipX": false, "flipY": false,
+          "palette": 0, "paletteIndex": 0,
+          "objPalette": "OBP0",
+          "priority": false
+        }]
+      }]
+    }]
+  }]
 }
 ```
 
-The `filename` is relative to `assets/sprites/`. Sprite dimensions depend on `numFrames` and the sprite type.
+**Animation types:** `fixed`, `multi_movement`, `multi`, `fixed_movement`
 
-## Palette Structure
+### Variable Format
+
+Variables use string IDs: `"0"`, `"1"`, etc. for globals.
 
 ```json
 {
-  "id": "uuid",
-  "name": "Default Palette",
-  "colors": [
-    ["E8F8E0", "B0F088", "509878", "202850"]
-  ]
+  "_resourceType": "variables",
+  "variables": [
+    { "id": "0", "name": "Has Key", "symbol": "var_has_key" }
+  ],
+  "constants": []
 }
 ```
 
-Each palette contains arrays of 4 hex colors, from lightest to darkest. The classic Game Boy green palette is `["E8F8E0", "B0F088", "509878", "202850"]`.
+### Value Types in Events
 
-## Settings
+GB Studio 4.2.2 uses typed values in event args:
 
 ```json
-{
-  "startSceneId": "scene-uuid",
-  "startX": 0,
-  "startY": 0,
-  "startMoveSpeed": 1,
-  "startAnimSpeed": 3,
-  "startDirection": "down",
-  "playerSpriteSheetId": "sprite-uuid",
-  "defaultBackgroundPaletteIds": ["pal-uuid", ...],
-  "defaultSpritePaletteIds": ["pal-uuid", ...],
-  "defaultUIPaletteId": "pal-uuid"
-}
+{ "type": "number", "value": 5 }
+{ "type": "true" }
+{ "type": "false" }
+{ "type": "variable", "value": "0" }
+{ "type": "eq", "valueA": {...}, "valueB": {...} }
 ```
-
-| Field | Description |
-|-------|-------------|
-| `startSceneId` | UUID of the scene where the game begins |
-| `startX`, `startY` | Player's starting tile position |
-| `startDirection` | Player's starting facing direction |
-| `playerSpriteSheetId` | UUID of the player's sprite sheet |
-| `defaultBackgroundPaletteIds` | Array of 6 palette UUIDs for background layers |
-| `defaultSpritePaletteIds` | Array of 6 palette UUIDs for sprite layers |
-| `defaultUIPaletteId` | UUID of the UI palette |
-
-## Script Event Structure
-
-See [Script Events](script-events.md) for the full reference. The basic structure is:
-
-```json
-{
-  "id": "uuid",
-  "command": "EVENT_TEXT",
-  "args": { "text": "Hello!" },
-  "children": {}
-}
-```
-
-Events are stored in arrays and execute sequentially. Conditional events use the `children` field with `"true"` and `"false"` keys containing sub-arrays of events.

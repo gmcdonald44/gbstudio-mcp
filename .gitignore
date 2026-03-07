@@ -1,11 +1,10 @@
 node_modules/
 dist/
-*.gbsproj
 *.gb
 *.gbc
-assets/
 .env
 
 test_comp.png
 test_jimp.png
 test-output/
+test-direct-output/

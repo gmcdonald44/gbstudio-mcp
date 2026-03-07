@@ -1,0 +1,23 @@
+{
+  "_resourceType": "scene",
+  "id": "92c52829-c008-4f13-b1de-e5688499dbb1",
+  "_index": 1,
+  "type": "TOPDOWN",
+  "name": "Dungeon Corridor",
+  "symbol": "scene_dungeon_corridor",
+  "x": 300,
+  "y": 0,
+  "width": 20,
+  "height": 18,
+  "backgroundId": "af937bf4-b5b8-4bb1-9b6b-c9b5a3513cb5",
+  "tilesetId": "",
+  "colorModeOverride": "none",
+  "paletteIds": [],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
+  "script": [],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "collisions": ""
+}

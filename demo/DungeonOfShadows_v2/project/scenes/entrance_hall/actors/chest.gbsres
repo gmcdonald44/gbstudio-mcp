@@ -1,0 +1,78 @@
+{
+  "_resourceType": "actor",
+  "id": "4835e45d-484c-4abe-a35f-7ce4f619b0fb",
+  "_index": 1,
+  "symbol": "actor_chest",
+  "prefabId": "",
+  "name": "Chest",
+  "coordinateType": "tiles",
+  "x": 2,
+  "y": 3,
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "a56e250b-362c-407c-b23d-9069a3426d88",
+  "paletteId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "a8186710-073a-4550-81d8-7e9d2b24a429",
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "0"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "id": "519b29b2-f6d0-4f34-b65e-86b3e29e15e6",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "The chest is empty."
+            }
+          }
+        ],
+        "false": [
+          {
+            "id": "9f1645c0-fe0d-490f-b9b0-ae03b3928f86",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "You found a key!"
+            }
+          },
+          {
+            "id": "2b774579-dc2d-4555-a312-4532e6997c07",
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "0",
+              "value": {
+                "type": "true"
+              }
+            }
+          }
+        ]
+      },
+      "__type": "event"
+    }
+  ],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}

@@ -1,0 +1,23 @@
+{
+  "_resourceType": "scene",
+  "id": "f1882cdb-a352-48ce-9082-4b391a873aab",
+  "_index": 0,
+  "type": "TOPDOWN",
+  "name": "Entrance Hall",
+  "symbol": "scene_entrance_hall",
+  "x": 0,
+  "y": 0,
+  "width": 20,
+  "height": 18,
+  "backgroundId": "40aadb23-32d4-4607-b68f-6c19de141e95",
+  "tilesetId": "",
+  "colorModeOverride": "none",
+  "paletteIds": [],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
+  "script": [],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "collisions": ""
+}

@@ -1,0 +1,40 @@
+{
+  "_resourceType": "sprite",
+  "id": "a0d9aeff-88dc-4d4a-a087-6a23052ad4c2",
+  "name": "demon",
+  "symbol": "sprite_demon",
+  "filename": "demon.png",
+  "states": [
+    {
+      "id": "b6a3cca5-1fc2-4b46-84e0-a01224fa796e",
+      "name": "",
+      "animationType": "fixed",
+      "flipLeft": false,
+      "animations": [
+        {
+          "id": "814dace4-ac77-4092-8bdc-203b8ef95930",
+          "frames": [
+            {
+              "id": "f7e745fc-5cf1-4e61-b28b-d33530bfb34a",
+              "tiles": [
+                {
+                  "id": "a9f910ca-e5a2-4c6f-9d59-938ac5a8433e",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "palette": 0,
+                  "paletteIndex": 0,
+                  "objPalette": "OBP0",
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

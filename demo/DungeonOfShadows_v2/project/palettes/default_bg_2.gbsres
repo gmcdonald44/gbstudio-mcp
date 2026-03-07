@@ -1,0 +1,18 @@
+{
+  "_resourceType": "palette",
+  "id": "default-bg-2",
+  "name": "Default BG 2",
+  "colors": [
+    "E0F8D0",
+    "88C070",
+    "346856",
+    "081820"
+  ],
+  "defaultName": "Default BG 2",
+  "defaultColors": [
+    "E0F8D0",
+    "88C070",
+    "346856",
+    "081820"
+  ]
+}

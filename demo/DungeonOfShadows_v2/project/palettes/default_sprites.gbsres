@@ -1,0 +1,18 @@
+{
+  "_resourceType": "palette",
+  "id": "default-sprite",
+  "name": "Default Sprites",
+  "colors": [
+    "F8F0E0",
+    "D88868",
+    "983860",
+    "082048"
+  ],
+  "defaultName": "Default Sprites",
+  "defaultColors": [
+    "F8F0E0",
+    "D88868",
+    "983860",
+    "082048"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "_resourceType": "trigger",
+  "id": "f48757f2-afeb-4505-8c6e-9dd360c6ec4c",
+  "_index": 0,
+  "symbol": "trigger_stairs_up",
+  "prefabId": "",
+  "name": "Stairs Up",
+  "x": 4,
+  "y": 17,
+  "width": 2,
+  "height": 1,
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "6d144dd3-633e-41bb-87ce-9a9993511d31",
+      "command": "EVENT_SWITCH_SCENE",
+      "args": {
+        "sceneId": "f1882cdb-a352-48ce-9082-4b391a873aab",
+        "x": {
+          "type": "number",
+          "value": 4
+        },
+        "y": {
+          "type": "number",
+          "value": 1
+        },
+        "direction": "down",
+        "fadeSpeed": "2"
+      }
+    }
+  ],
+  "leaveScript": []
+}

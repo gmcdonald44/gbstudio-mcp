@@ -1,0 +1,40 @@
+{
+  "_resourceType": "sprite",
+  "id": "983383d8-16d1-47e4-91d0-e61f1ae699b5",
+  "name": "sage",
+  "symbol": "sprite_sage",
+  "filename": "sage.png",
+  "states": [
+    {
+      "id": "4a677055-0023-444e-8a36-bee6707bd2b6",
+      "name": "",
+      "animationType": "fixed",
+      "flipLeft": false,
+      "animations": [
+        {
+          "id": "4e194fef-8c8a-4c01-9687-5dd666ad24aa",
+          "frames": [
+            {
+              "id": "8fadfc16-57f9-43a4-9c80-519cb7c8bbd9",
+              "tiles": [
+                {
+                  "id": "4d646cab-6afb-4b28-a139-a9301297d668",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "palette": 0,
+                  "paletteIndex": 0,
+                  "objPalette": "OBP0",
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "_resourceType": "sprite",
+  "id": "244eef77-efe4-4b62-b39f-3c2fc49c54cc",
+  "name": "merchant",
+  "symbol": "sprite_merchant",
+  "filename": "merchant.png",
+  "states": [
+    {
+      "id": "9c6a902b-1d12-43f3-98ac-c85345bd1133",
+      "name": "",
+      "animationType": "fixed",
+      "flipLeft": false,
+      "animations": [
+        {
+          "id": "c1ea9fc7-36d2-452c-855c-d34b3030d0c0",
+          "frames": [
+            {
+              "id": "6d8d1099-3a6a-4de0-9761-120e3ac64664",
+              "tiles": [
+                {
+                  "id": "e11f6c3c-b69f-4031-b8aa-db822a43cd40",
+                  "x": 0,
+                  "y": 0,
+                  "sliceX": 0,
+                  "sliceY": 0,
+                  "flipX": false,
+                  "flipY": false,
+                  "palette": 0,
+                  "paletteIndex": 0,
+                  "objPalette": "OBP0",
+                  "priority": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

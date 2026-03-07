@@ -1,0 +1,18 @@
+{
+  "_resourceType": "palette",
+  "id": "default-bg-4",
+  "name": "Default BG 4",
+  "colors": [
+    "F8F8B0",
+    "90C8B8",
+    "486878",
+    "082048"
+  ],
+  "defaultName": "Default BG 4",
+  "defaultColors": [
+    "F8F8B0",
+    "90C8B8",
+    "486878",
+    "082048"
+  ]
+}

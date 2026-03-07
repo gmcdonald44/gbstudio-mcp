@@ -1,0 +1,18 @@
+{
+  "_resourceType": "palette",
+  "id": "default-bg-6",
+  "name": "Default BG 6",
+  "colors": [
+    "D8D8C0",
+    "C8B070",
+    "B05010",
+    "000000"
+  ],
+  "defaultName": "Default BG 6",
+  "defaultColors": [
+    "D8D8C0",
+    "C8B070",
+    "B05010",
+    "000000"
+  ]
+}

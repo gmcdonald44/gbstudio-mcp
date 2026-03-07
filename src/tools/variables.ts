@@ -1,56 +1,34 @@
 /**
  * @module tools/variables
- * @description Variable management tools — add and list global game variables.
- * Variables are used to track game state (flags like "hasSword", counters like "gold", etc.)
- * and can be checked/modified in script events.
+ * @description Variable management tools for GB Studio 4.2.2.
+ * Variables use string IDs (numeric "0", "1", ... for globals, or "actorId__L0" for locals).
  */
 import { requireProject, uuid } from "../project.js";
 
 export const variableTools = {
-  /**
-   * @description Add a new global variable to the project. Variables are referenced
-   * by UUID in script events like EVENT_IF_VARIABLE_TRUE and EVENT_SET_VARIABLE_TRUE.
-   *
-   * @param args.name - Variable name (required)
-   * @returns MCP response with the variable name and UUID
-   *
-   * @example
-   * // MCP call:
-   * { "name": "add_variable", "arguments": { "name": "hasSword" } }
-   * // Returns: "Variable added: \"hasSword\" (variable-uuid)"
-   *
-   * @example
-   * // Then use the UUID in a conditional:
-   * // add_script_event with command "EVENT_IF_VARIABLE_TRUE" and args { variableId: "variable-uuid" }
-   */
   add_variable: {
-    description: "Add a global variable to the project",
+    description: "Add a global variable to the project. Uses GB Studio 4.2.2 format with id, name, and symbol.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        name: { type: "string", description: "Variable name" },
+        name: { type: "string", description: "Variable display name" },
+        symbol: { type: "string", description: "Variable symbol (auto-generated if omitted)" },
       },
       required: ["name"],
     },
-    handler: async (args: { name: string }) => {
+    handler: async (args: { name: string; symbol?: string }) => {
       const p = requireProject();
-      const v = { id: uuid(), name: args.name };
-      p.variables.push(v);
-      return { content: [{ type: "text" as const, text: `Variable added: "${v.name}" (${v.id})` }] };
+      // Use next numeric ID for globals
+      const numericIds = p.variables.filter(v => /^\d+$/.test(v.id)).map(v => parseInt(v.id));
+      const nextId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 0;
+      const symbol = args.symbol || "var_" + args.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "");
+
+      const variable = { id: String(nextId), name: args.name, symbol };
+      p.variables.push(variable);
+      return { content: [{ type: "text" as const, text: `Variable added: "${variable.name}" (id: ${variable.id}, symbol: ${variable.symbol})` }] };
     },
   },
 
-  /**
-   * @description List all global variables in the project with their UUIDs.
-   *
-   * @returns MCP response with JSON array of all variables
-   * @throws {Error} If no project is loaded
-   *
-   * @example
-   * // MCP call:
-   * { "name": "list_variables", "arguments": {} }
-   * // Returns: [{ "id": "uuid-here", "name": "hasSword" }, { "id": "uuid-here", "name": "gold" }]
-   */
   list_variables: {
     description: "List all global variables",
     inputSchema: { type: "object" as const, properties: {} },
@@ -60,26 +38,16 @@ export const variableTools = {
     },
   },
 
-  /**
-   * @description Delete a global variable from the project.
-   * Note: This does not remove references to the variable in scripts — those should be cleaned up separately.
-   *
-   * @param args.variableId - UUID of the variable to delete (required)
-   * @returns MCP response confirming the deletion
-   * @throws {Error} If variable not found
-   */
   delete_variable: {
-    description: "Delete a global variable from the project",
+    description: "Delete a global variable by ID",
     inputSchema: {
       type: "object" as const,
-      properties: {
-        variableId: { type: "string", description: "Variable UUID" },
-      },
+      properties: { variableId: { type: "string" } },
       required: ["variableId"],
     },
     handler: async (args: { variableId: string }) => {
       const p = requireProject();
-      const idx = p.variables.findIndex((v) => v.id === args.variableId);
+      const idx = p.variables.findIndex(v => v.id === args.variableId);
       if (idx === -1) throw new Error(`Variable not found: ${args.variableId}`);
       const removed = p.variables.splice(idx, 1)[0];
       return { content: [{ type: "text" as const, text: `Variable deleted: "${removed.name}"` }] };

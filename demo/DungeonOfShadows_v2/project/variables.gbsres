@@ -1,0 +1,21 @@
+{
+  "_resourceType": "variables",
+  "variables": [
+    {
+      "id": "0",
+      "name": "Has Key",
+      "symbol": "var_has_key"
+    },
+    {
+      "id": "1",
+      "name": "Talked to Merchant",
+      "symbol": "var_talked_to_merchant"
+    },
+    {
+      "id": "2",
+      "name": "Boss Defeated",
+      "symbol": "var_boss_defeated"
+    }
+  ],
+  "constants": []
+}

@@ -1,0 +1,33 @@
+{
+  "_resourceType": "trigger",
+  "id": "005da524-d71b-4244-b86f-8cd916525fd8",
+  "_index": 0,
+  "symbol": "trigger_stairs_down",
+  "prefabId": "",
+  "name": "Stairs Down",
+  "x": 4,
+  "y": 0,
+  "width": 2,
+  "height": 1,
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "b910828e-c6a6-41e6-a878-e4861a648d02",
+      "command": "EVENT_SWITCH_SCENE",
+      "args": {
+        "sceneId": "92c52829-c008-4f13-b1de-e5688499dbb1",
+        "x": {
+          "type": "number",
+          "value": 4
+        },
+        "y": {
+          "type": "number",
+          "value": 16
+        },
+        "direction": "up",
+        "fadeSpeed": "2"
+      }
+    }
+  ],
+  "leaveScript": []
+}

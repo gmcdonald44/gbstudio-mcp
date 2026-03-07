@@ -1,0 +1,85 @@
+{
+  "_resourceType": "actor",
+  "id": "97a0b264-e8c3-4a4d-9e0b-1160d36a1d1e",
+  "_index": 0,
+  "symbol": "actor_demon_boss",
+  "prefabId": "",
+  "name": "Demon Boss",
+  "coordinateType": "tiles",
+  "x": 5,
+  "y": 3,
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "a0d9aeff-88dc-4d4a-a087-6a23052ad4c2",
+  "paletteId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "e7a9b99d-fb05-4eb6-8194-1a8e52757a1f",
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "2"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "id": "17ba67b1-5517-4d3e-8da8-595a157bfcde",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "You already\ndefeated me..."
+            }
+          }
+        ],
+        "false": [
+          {
+            "id": "f3d0a4b8-b3c7-47d2-b601-4ed088f63c2b",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "FOOLISH MORTAL!\nYou dare enter\nmy chamber?!"
+            }
+          },
+          {
+            "id": "8a661990-2710-4103-9cf3-5b729d0156ad",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "...Fine. You win.\nTake the treasure."
+            }
+          },
+          {
+            "id": "4118d6d3-1849-4ac5-9245-c20d2bd89893",
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "2",
+              "value": {
+                "type": "true"
+              }
+            }
+          }
+        ]
+      },
+      "__type": "event"
+    }
+  ],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}

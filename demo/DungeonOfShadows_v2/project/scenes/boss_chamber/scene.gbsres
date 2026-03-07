@@ -1,0 +1,23 @@
+{
+  "_resourceType": "scene",
+  "id": "ac7bc3ef-e68e-4ff9-a03d-2f50b7825772",
+  "_index": 2,
+  "type": "TOPDOWN",
+  "name": "Boss Chamber",
+  "symbol": "scene_boss_chamber",
+  "x": 600,
+  "y": 0,
+  "width": 20,
+  "height": 18,
+  "backgroundId": "bdb88603-28d8-4202-8b52-1ecad0714d47",
+  "tilesetId": "",
+  "colorModeOverride": "none",
+  "paletteIds": [],
+  "spritePaletteIds": [],
+  "autoFadeSpeed": 1,
+  "script": [],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "collisions": ""
+}

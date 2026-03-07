@@ -1,0 +1,71 @@
+{
+  "_resourceType": "trigger",
+  "id": "5ef4ecd3-0e32-43a0-a39b-4e17902daa23",
+  "_index": 1,
+  "symbol": "trigger_locked_door",
+  "prefabId": "",
+  "name": "Locked Door",
+  "x": 4,
+  "y": 0,
+  "width": 2,
+  "height": 1,
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "baa37991-5bc3-4d2c-a1f5-cd17adda728e",
+      "command": "EVENT_IF",
+      "args": {
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "0"
+          },
+          "valueB": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "id": "43888d72-3b8b-42d6-a6f5-361f038eaa62",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "You use the key.\nThe door opens!"
+            }
+          },
+          {
+            "id": "47230f1c-6118-424c-8920-eb90ea3262d9",
+            "command": "EVENT_SWITCH_SCENE",
+            "args": {
+              "sceneId": "ac7bc3ef-e68e-4ff9-a03d-2f50b7825772",
+              "x": {
+                "type": "number",
+                "value": 4
+              },
+              "y": {
+                "type": "number",
+                "value": 16
+              },
+              "direction": "up",
+              "fadeSpeed": "2"
+            }
+          }
+        ],
+        "false": [
+          {
+            "id": "71901cd4-3eca-4793-9ca0-71fa073603de",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "The door is locked.\nYou need a key."
+            }
+          }
+        ]
+      },
+      "__type": "event"
+    }
+  ],
+  "leaveScript": []
+}

@@ -1,11 +1,18 @@
 /**
  * @module project
- * @description Core project state management for the GB Studio MCP server.
- *
- * This module defines all TypeScript interfaces for GB Studio project structures
- * (scenes, actors, triggers, variables, etc.) and provides the in-memory state
- * layer that all tool handlers operate on. The project is held in memory and
- * can be saved to / loaded from `.gbsproj` files on disk.
+ * @description Core project state management for GB Studio 4.2.2 MCP server.
+ * 
+ * Implements the native GB Studio 4.2.2 split-resource format:
+ * - project.gbsproj (root metadata)
+ * - project/settings.gbsres
+ * - project/variables.gbsres
+ * - project/engine_field_values.gbsres
+ * - project/palettes/*.gbsres
+ * - project/scenes/<path>/scene.gbsres
+ * - project/scenes/<path>/actors/*.gbsres
+ * - project/scenes/<path>/triggers/*.gbsres
+ * - assets/backgrounds/*.png.gbsres
+ * - assets/sprites/*.png.gbsres
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -13,426 +20,707 @@ import * as crypto from "crypto";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-/**
- * @interface ScriptEvent
- * @description A single scripted event in a GB Studio script array.
- * Script events are the building blocks of game logic — dialogue, scene switches,
- * conditionals, variable operations, movement, camera control, etc.
- *
- * @example
- * const dialogueEvent: ScriptEvent = {
- *   id: "a1b2c3d4-...",
- *   command: "EVENT_TEXT",
- *   args: { text: "Hello, adventurer!" }
- * };
- *
- * @example
- * // Conditional event with true/false branches
- * const conditional: ScriptEvent = {
- *   id: "e5f6g7h8-...",
- *   command: "EVENT_IF_TRUE",
- *   args: { variable: "var-uuid" },
- *   children: {
- *     true: [{ id: "...", command: "EVENT_TEXT", args: { text: "You have the key!" } }],
- *     false: [{ id: "...", command: "EVENT_TEXT", args: { text: "Come back with the key." } }]
- *   }
- * };
- */
 export interface ScriptEvent {
-  /** Unique identifier (UUID v4) */
   id: string;
-  /** Event command name, e.g. "EVENT_TEXT", "EVENT_SWITCH_SCENE" */
   command: string;
-  /** Command-specific arguments */
   args?: Record<string, any>;
-  /** Child script branches, used by conditionals (keys: "true", "false") */
   children?: Record<string, ScriptEvent[]>;
+  __type?: "event";
 }
 
-/**
- * @interface Actor
- * @description An actor (NPC, object, or interactive entity) placed in a scene.
- * Actors have a position, sprite, direction, and multiple script slots for
- * different interaction types.
- *
- * @example
- * const shopkeeper: Actor = {
- *   id: "uuid-here",
- *   name: "Shopkeeper",
- *   x: 5, y: 8,
- *   spriteSheetId: "sprite-uuid",
- *   spriteType: "STATIC",
- *   direction: "down",
- *   moveSpeed: 1, animSpeed: 3,
- *   script: [],        // On interact
- *   startScript: [],   // On scene load
- *   updateScript: [],  // Every frame
- *   hit1Script: [], hit2Script: [], hit3Script: []
- * };
- */
 export interface Actor {
-  /** Unique identifier (UUID v4) */
+  _resourceType: "actor";
   id: string;
-  /** Display name */
+  _index: number;
+  symbol: string;
+  prefabId: string;
   name: string;
-  /** Tile X position within the scene */
+  coordinateType: "tiles";
   x: number;
-  /** Tile Y position within the scene */
   y: number;
-  /** Reference to sprite sheet asset UUID */
+  frame: number;
+  animate: boolean;
   spriteSheetId: string;
-  /** Sprite rendering type */
-  spriteType: "STATIC" | "ACTOR" | "ACTOR_ANIMATED";
-  /** Facing direction */
+  paletteId: string;
   direction: "down" | "up" | "left" | "right";
-  /** Movement speed (1-4) */
   moveSpeed: number;
-  /** Animation speed (1-4) */
   animSpeed: number;
-  /** Script executed when player interacts with this actor */
+  isPinned: boolean;
+  persistent: boolean;
+  collisionGroup: string;
+  collisionExtraFlags: string[];
+  prefabScriptOverrides: Record<string, any>;
   script: ScriptEvent[];
-  /** Script executed when the scene starts */
   startScript: ScriptEvent[];
-  /** Script executed every frame */
   updateScript: ScriptEvent[];
-  /** Script executed on collision hit 1 */
   hit1Script: ScriptEvent[];
-  /** Script executed on collision hit 2 */
   hit2Script: ScriptEvent[];
-  /** Script executed on collision hit 3 */
   hit3Script: ScriptEvent[];
 }
 
-/**
- * @interface Trigger
- * @description An invisible zone in a scene that fires scripts when the player
- * enters or leaves it. Commonly used for doors, scene transitions, and events.
- *
- * @example
- * const doorTrigger: Trigger = {
- *   id: "uuid-here",
- *   name: "Door to Dungeon",
- *   x: 10, y: 15, width: 2, height: 1,
- *   script: [{ id: "...", command: "EVENT_SWITCH_SCENE", args: { sceneId: "dungeon-uuid", x: 1, y: 1, direction: "down", fadeSpeed: 2 } }],
- *   leaveScript: []
- * };
- */
 export interface Trigger {
-  /** Unique identifier (UUID v4) */
+  _resourceType: "trigger";
   id: string;
-  /** Display name */
+  _index: number;
+  symbol: string;
+  prefabId: string;
   name: string;
-  /** Tile X position */
   x: number;
-  /** Tile Y position */
   y: number;
-  /** Width in tiles */
   width: number;
-  /** Height in tiles */
   height: number;
-  /** Script executed when player enters the trigger zone */
+  prefabScriptOverrides: Record<string, any>;
   script: ScriptEvent[];
-  /** Script executed when player leaves the trigger zone */
   leaveScript: ScriptEvent[];
 }
 
-/**
- * @interface Scene
- * @description A game scene (screen/map/room) containing actors, triggers,
- * collision data, and scripts. Scenes are the primary organizational unit
- * in a GB Studio project.
- */
 export interface Scene {
-  /** Unique identifier (UUID v4) */
+  _resourceType: "scene";
   id: string;
-  /** Display name */
-  name: string;
-  /** Reference to background asset UUID */
-  backgroundId: string;
-  /** World X position in pixels (for editor layout) */
-  x: number;
-  /** World Y position in pixels (for editor layout) */
-  y: number;
-  /** Width in tiles */
-  width: number;
-  /** Height in tiles */
-  height: number;
-  /** Scene type identifier */
+  _index: number;
   type: string;
-  /** Actors placed in this scene */
-  actors: Actor[];
-  /** Trigger zones in this scene */
-  triggers: Trigger[];
-  /** Collision tile data */
-  collisions: number[];
-  /** Scene initialization script */
+  name: string;
+  symbol: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  backgroundId: string;
+  tilesetId: string;
+  colorModeOverride: string;
+  paletteIds: string[];
+  spritePaletteIds: string[];
+  autoFadeSpeed: number;
   script: ScriptEvent[];
-  /** Player hit scripts */
   playerHit1Script: ScriptEvent[];
   playerHit2Script: ScriptEvent[];
   playerHit3Script: ScriptEvent[];
+  collisions: string;
+  actors: Actor[];
+  triggers: Trigger[];
 }
 
-/**
- * @interface Background
- * @description A background image asset. References a PNG file in the project's
- * assets/backgrounds/ directory.
- */
 export interface Background {
+  _resourceType: "background";
   id: string;
   name: string;
-  /** Filename relative to assets/backgrounds/ */
+  symbol: string;
   filename: string;
-  /** Width in tiles */
   width: number;
-  /** Height in tiles */
   height: number;
-  /** Image width in pixels */
   imageWidth: number;
-  /** Image height in pixels */
   imageHeight: number;
+  tileColors: string;
+  autoColor: boolean;
 }
 
-/**
- * @interface SpriteSheet
- * @description A sprite sheet asset. References a PNG file in the project's
- * assets/sprites/ directory.
- */
 export interface SpriteSheet {
+  _resourceType: "sprite";
   id: string;
   name: string;
-  /** Filename relative to assets/sprites/ */
+  symbol: string;
   filename: string;
-  /** Number of animation frames */
-  numFrames: number;
+  states: SpriteState[];
 }
 
-/**
- * @interface Variable
- * @description A global game variable used for tracking game state (flags, counters, etc.).
- */
+export interface SpriteState {
+  id: string;
+  name: string;
+  animationType: string;
+  flipLeft: boolean;
+  animations: SpriteAnimation[];
+}
+
+export interface SpriteAnimation {
+  id: string;
+  frames: SpriteFrame[];
+}
+
+export interface SpriteFrame {
+  id: string;
+  tiles: SpriteTile[];
+}
+
+export interface SpriteTile {
+  id: string;
+  x: number;
+  y: number;
+  sliceX: number;
+  sliceY: number;
+  flipX: boolean;
+  flipY: boolean;
+  palette: number;
+  paletteIndex: number;
+  objPalette: string;
+  priority: boolean;
+}
+
 export interface Variable {
   id: string;
   name: string;
+  symbol: string;
 }
 
-/**
- * @interface Palette
- * @description A color palette for Game Boy rendering. Each palette contains
- * arrays of 4 hex color strings (lightest to darkest).
- */
 export interface Palette {
+  _resourceType: "palette";
   id: string;
   name: string;
-  /** Array of color sets, each with 4 hex color strings */
-  colors: string[][];
+  colors: string[];
+  defaultName: string;
+  defaultColors: string[];
 }
 
-/**
- * @interface GBSProject
- * @description The root structure of a GB Studio project (.gbsproj file).
- * Contains all scenes, assets, variables, palettes, and settings.
- */
 export interface GBSProject {
-  /** Project format version (semver string, e.g. "4.1.0") */
-  _version: string;
-  /** Project format release (string, e.g. "1") */
-  _release: string;
-  /** Project name */
+  // Root .gbsproj fields
+  _resourceType: "project";
   name: string;
-  /** Author name */
   author: string;
-  /** Project notes */
   notes: string;
-  /** All scenes in the project */
+  _version: string;
+  _release: string;
+  // In-memory collections (not saved to .gbsproj)
   scenes: Scene[];
-  /** Background image assets */
   backgrounds: Background[];
-  /** Sprite sheet assets */
   spriteSheets: SpriteSheet[];
-  /** Color palettes */
   palettes: Palette[];
-  /** Music tracks */
   music: any[];
-  /** Global game variables */
   variables: Variable[];
-  /** Project settings (start scene, player sprite, palettes, etc.) */
+  constants: any[];
   settings: Record<string, any>;
+  engineFieldValues: any[];
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
-/** @internal The currently loaded project, or null if none is loaded */
 let currentProject: GBSProject | null = null;
-/** @internal File path of the currently loaded project */
 let currentProjectPath: string | null = null;
 
-/**
- * Generate a new UUID v4.
- * @returns A new random UUID string
- */
 export function uuid(): string {
   return crypto.randomUUID();
 }
 
-/**
- * Get the current in-memory project.
- * @returns The current project, or null if none is loaded
- */
 export function getProject(): GBSProject | null {
   return currentProject;
 }
 
-/**
- * Get the file path of the current project.
- * @returns The project file path, or null if none is set
- */
 export function getProjectPath(): string | null {
   return currentProjectPath;
 }
 
-/**
- * Get the current project, throwing if none is loaded.
- * @returns The current project
- * @throws {Error} If no project is loaded
- *
- * @example
- * const project = requireProject(); // throws if no project loaded
- * console.log(project.name);
- */
 export function requireProject(): GBSProject {
   if (!currentProject) throw new Error("No project loaded. Use create_project or open_project first.");
   return currentProject;
 }
 
-/**
- * Set the current in-memory project and its file path.
- * @param project - The project data
- * @param projectPath - The file path for saving
- */
 export function setProject(project: GBSProject, projectPath: string) {
   currentProject = project;
   currentProjectPath = projectPath;
 }
 
-/**
- * Create a new GB Studio project with default assets and settings.
- * Includes a default background (160×144), sprite sheet, and classic Game Boy palette.
- *
- * @param name - Project name
- * @param author - Author name
- * @returns A new GBSProject with default assets
- *
- * @example
- * const project = createDefaultProject("MyRPG", "Grant");
- * // project.backgrounds[0].id → default background UUID
- * // project.spriteSheets[0].id → default sprite UUID
- */
-export function createDefaultProject(name: string, author: string): GBSProject {
-  const defaultBgId = uuid();
-  const defaultSpriteId = uuid();
-  const defaultPaletteId = uuid();
+/** Generate a symbol-safe name from a display name */
+function toSymbol(prefix: string, name: string): string {
+  return prefix + "_" + name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "").replace(/^_+/, "");
+}
 
+/** Create default palettes matching GB Studio 4.2.2 blank template */
+function createDefaultPalettes(): Palette[] {
+  return [
+    { _resourceType: "palette", id: "default-bg-1", name: "Default BG 1", colors: ["F8E8C8", "D89048", "A82820", "082048"], defaultName: "Default BG 1", defaultColors: ["F8E8C8", "D89048", "A82820", "301850"] },
+    { _resourceType: "palette", id: "default-bg-2", name: "Default BG 2", colors: ["E0F8D0", "88C070", "346856", "081820"], defaultName: "Default BG 2", defaultColors: ["E0F8D0", "88C070", "346856", "081820"] },
+    { _resourceType: "palette", id: "default-bg-3", name: "Default BG 3", colors: ["F8D8A8", "E0A878", "785888", "002030"], defaultName: "Default BG 3", defaultColors: ["F8D8A8", "E0A878", "785888", "002030"] },
+    { _resourceType: "palette", id: "default-bg-4", name: "Default BG 4", colors: ["F8F8B0", "90C8B8", "486878", "082048"], defaultName: "Default BG 4", defaultColors: ["F8F8B0", "90C8B8", "486878", "082048"] },
+    { _resourceType: "palette", id: "default-bg-5", name: "Default BG 5", colors: ["F8D8B0", "78C078", "688840", "583820"], defaultName: "Default BG 5", defaultColors: ["F8D8B0", "78C078", "688840", "583820"] },
+    { _resourceType: "palette", id: "default-bg-6", name: "Default BG 6", colors: ["D8D8C0", "C8B070", "B05010", "000000"], defaultName: "Default BG 6", defaultColors: ["D8D8C0", "C8B070", "B05010", "000000"] },
+    { _resourceType: "palette", id: "default-sprite", name: "Default Sprites", colors: ["F8F0E0", "D88868", "983860", "082048"], defaultName: "Default Sprites", defaultColors: ["F8F0E0", "D88868", "983860", "082048"] },
+    { _resourceType: "palette", id: "default-ui", name: "Default UI", colors: ["F8F8B0", "A8A060", "685830", "202010"], defaultName: "Default UI", defaultColors: ["F8F8B0", "A8A060", "685830", "202010"] },
+  ];
+}
+
+/** Create a minimal static sprite with a single tile */
+export function createStaticSprite(name: string, filename: string, sliceX = 0, sliceY = 0): SpriteSheet {
   return {
-    _version: "4.1.0",
-    _release: "1",
+    _resourceType: "sprite",
+    id: uuid(),
+    name,
+    symbol: toSymbol("sprite", name),
+    filename,
+    states: [{
+      id: uuid(),
+      name: "",
+      animationType: "fixed",
+      flipLeft: false,
+      animations: [{
+        id: uuid(),
+        frames: [{
+          id: uuid(),
+          tiles: [{
+            id: uuid(),
+            x: 0, y: 0,
+            sliceX, sliceY,
+            flipX: false, flipY: false,
+            palette: 0, paletteIndex: 0,
+            objPalette: "OBP0", priority: false,
+          }],
+        }],
+      }],
+    }],
+  };
+}
+
+/** Create a multi_movement sprite (player-style) with 4 directions */
+export function createPlayerSprite(name: string, filename: string): SpriteSheet {
+  const makeAnim = (sliceX: number, sliceY: number) => ({
+    id: uuid(),
+    frames: [{
+      id: uuid(),
+      tiles: [
+        { id: uuid(), x: 0, y: 0, sliceX, sliceY, flipX: false, flipY: false, palette: 0, paletteIndex: 0, objPalette: "OBP0", priority: false },
+        { id: uuid(), x: 8, y: 0, sliceX: sliceX + 8, sliceY, flipX: false, flipY: false, palette: 0, paletteIndex: 0, objPalette: "OBP0", priority: false },
+      ],
+    }],
+  });
+
+  // 8 animations: idle_down, idle_right, idle_up, idle_left (mirrored), walk_down, walk_right, walk_up, walk_left
+  return {
+    _resourceType: "sprite",
+    id: uuid(),
+    name,
+    symbol: toSymbol("sprite", name),
+    filename,
+    states: [{
+      id: uuid(),
+      name: "",
+      animationType: "multi_movement",
+      flipLeft: true,
+      animations: [
+        makeAnim(0, 0),   // idle down
+        makeAnim(16, 0),  // idle right
+        makeAnim(32, 0),  // idle up
+        makeAnim(16, 0),  // idle left (flipped)
+        makeAnim(0, 0),   // walk down
+        makeAnim(16, 0),  // walk right
+        makeAnim(32, 0),  // walk up
+        makeAnim(16, 0),  // walk left (flipped)
+      ],
+    }],
+  };
+}
+
+export function createDefaultProject(name: string, author: string): GBSProject {
+  return {
+    _resourceType: "project",
     name,
     author,
     notes: "",
+    _version: "4.2.0",
+    _release: "10",
     scenes: [],
-    backgrounds: [
-      {
-        id: defaultBgId,
-        name: "Default Background",
-        filename: "default.png",
-        width: 20,
-        height: 18,
-        imageWidth: 160,
-        imageHeight: 144,
-      },
-    ],
-    spriteSheets: [
-      {
-        id: defaultSpriteId,
-        name: "Default Sprite",
-        filename: "default_sprite.png",
-        numFrames: 1,
-      },
-    ],
-    palettes: [
-      {
-        id: defaultPaletteId,
-        name: "Default Palette",
-        colors: [
-          ["E8F8E0", "B0F088", "509878", "202850"],
-        ],
-      },
-    ],
+    backgrounds: [],
+    spriteSheets: [],
+    palettes: createDefaultPalettes(),
     music: [],
     variables: [],
+    constants: [],
     settings: {
+      _resourceType: "settings",
       startSceneId: "",
       startX: 0,
       startY: 0,
       startMoveSpeed: 1,
-      startAnimSpeed: 3,
+      startAnimSpeed: 15,
       startDirection: "down",
-      playerSpriteSheetId: defaultSpriteId,
-      defaultBackgroundPaletteIds: [defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId],
-      defaultSpritePaletteIds: [defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId, defaultPaletteId],
-      defaultUIPaletteId: defaultPaletteId,
+      showCollisionExtraTiles: false,
+      showCollisionTileValues: false,
+      collisionLayerOpacity: 50,
+      sgbEnabled: false,
+      customHead: "",
+      defaultBackgroundPaletteIds: [
+        "default-bg-1", "default-bg-2", "default-bg-3", "default-bg-4",
+        "default-bg-5", "default-bg-6", "dmg", "default-ui"
+      ],
+      defaultSpritePaletteIds: [
+        "default-sprite", "default-sprite", "default-sprite", "default-sprite",
+        "default-sprite", "default-sprite", "default-sprite", "default-sprite"
+      ],
+      defaultSpritePaletteId: "default-sprite",
+      defaultUIPaletteId: "default-ui",
+      playerPaletteId: "",
+      defaultMonoBGP: [0, 1, 2, 3],
+      defaultMonoOBP0: [0, 1, 3],
+      defaultMonoOBP1: [0, 2, 3],
+      defaultFontId: "",
+      defaultCharacterEncoding: "",
+      defaultPlayerSprites: {},
+      musicDriver: "huge",
+      cartType: "mbc5",
+      batterylessEnabled: false,
+      customColorsWhite: "E8F8E0",
+      customColorsLight: "B0F088",
+      customColorsDark: "509878",
+      customColorsBlack: "202850",
+      customControlsUp: ["ArrowUp", "w"],
+      customControlsDown: ["ArrowDown", "s"],
+      customControlsLeft: ["ArrowLeft", "a"],
+      customControlsRight: ["ArrowRight", "d"],
+      customControlsA: ["Alt", "z", "j"],
+      customControlsB: ["Control", "k", "x"],
+      customControlsStart: ["Enter"],
+      customControlsSelect: ["Shift"],
+      colorMode: "mono",
+      colorCorrection: "default",
+      generateDebugFilesEnabled: false,
+      compilerPreset: 3000,
+      scriptEventPresets: {},
+      scriptEventDefaultPresets: {},
+      runSceneSelectionOnly: false,
+      spriteMode: "8x16",
+      openBuildFolderOnExport: true,
+      showRomUsageAfterBuild: false,
+      romFilename: "",
+      defaultSceneTypeId: "TOPDOWN",
+      disabledSceneTypeIds: [],
+      autoTileFlipEnabled: true,
     },
+    engineFieldValues: [
+      { id: "fade_style", value: 0 },
+      { id: "FEAT_PLATFORM_COYOTE_TIME", value: 0 },
+      { id: "FEAT_PLATFORM_DROP_THROUGH", value: 0 },
+      { id: "SHOOTER_MOVEMENT_TYPE", value: "MOVEMENT_TYPE_LOCK_PERPENDICULAR" },
+      { id: "SHOOTER_TRIGGER_ACTIVATION", value: "ON_PLAYER_COLLISION" },
+      { id: "SHOOTER_WALL_COLLISION_GROUP", value: "COLLISION_GROUP_NONE" },
+    ],
   };
 }
 
-/**
- * Save the current in-memory project to its file path on disk.
- * Creates parent directories if they don't exist.
- *
- * @returns The absolute path where the project was saved
- * @throws {Error} If no project is loaded or no path is set
- *
- * @example
- * const savedPath = saveProjectToDisk();
- * // savedPath → "C:/games/MyRPG/MyRPG.gbsproj"
- */
+/** Create a default actor with all GB Studio 4.2.2 fields */
+export function createActor(opts: {
+  name: string;
+  x: number;
+  y: number;
+  spriteSheetId: string;
+  direction?: string;
+  _index?: number;
+}): Actor {
+  return {
+    _resourceType: "actor",
+    id: uuid(),
+    _index: opts._index ?? 0,
+    symbol: toSymbol("actor", opts.name),
+    prefabId: "",
+    name: opts.name,
+    coordinateType: "tiles",
+    x: opts.x,
+    y: opts.y,
+    frame: 0,
+    animate: false,
+    spriteSheetId: opts.spriteSheetId,
+    paletteId: "",
+    direction: (opts.direction as any) || "down",
+    moveSpeed: 1,
+    animSpeed: 15,
+    isPinned: false,
+    persistent: false,
+    collisionGroup: "",
+    collisionExtraFlags: [],
+    prefabScriptOverrides: {},
+    script: [],
+    startScript: [],
+    updateScript: [],
+    hit1Script: [],
+    hit2Script: [],
+    hit3Script: [],
+  };
+}
+
+/** Create a default trigger with all GB Studio 4.2.2 fields */
+export function createTrigger(opts: {
+  name?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  _index?: number;
+}): Trigger {
+  const symbolName = opts.name || `trigger_${opts._index ?? 0}`;
+  return {
+    _resourceType: "trigger",
+    id: uuid(),
+    _index: opts._index ?? 0,
+    symbol: toSymbol("trigger", symbolName),
+    prefabId: "",
+    name: opts.name || "",
+    x: opts.x,
+    y: opts.y,
+    width: opts.width,
+    height: opts.height,
+    prefabScriptOverrides: {},
+    script: [],
+    leaveScript: [],
+  };
+}
+
+/** Create a default scene with all GB Studio 4.2.2 fields */
+export function createScene(opts: {
+  name: string;
+  backgroundId: string;
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  type?: string;
+  _index?: number;
+}): Scene {
+  return {
+    _resourceType: "scene",
+    id: uuid(),
+    _index: opts._index ?? 0,
+    type: opts.type || "TOPDOWN",
+    name: opts.name,
+    symbol: toSymbol("scene", opts.name),
+    x: opts.x ?? 0,
+    y: opts.y ?? 0,
+    width: opts.width ?? 20,
+    height: opts.height ?? 18,
+    backgroundId: opts.backgroundId,
+    tilesetId: "",
+    colorModeOverride: "none",
+    paletteIds: [],
+    spritePaletteIds: [],
+    autoFadeSpeed: 1,
+    script: [],
+    playerHit1Script: [],
+    playerHit2Script: [],
+    playerHit3Script: [],
+    collisions: "",
+    actors: [],
+    triggers: [],
+  };
+}
+
+/** Create a default background resource */
+export function createBackground(opts: {
+  name: string;
+  filename: string;
+  width: number;
+  height: number;
+  imageWidth: number;
+  imageHeight: number;
+}): Background {
+  return {
+    _resourceType: "background",
+    id: uuid(),
+    name: opts.name,
+    symbol: toSymbol("bg", opts.name),
+    filename: opts.filename,
+    width: opts.width,
+    height: opts.height,
+    imageWidth: opts.imageWidth,
+    imageHeight: opts.imageHeight,
+    tileColors: "",
+    autoColor: false,
+  };
+}
+
+// ─── Save / Load (Split-Resource Format) ─────────────────────────────────────
+
+function writeJson(filePath: string, data: any) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+}
+
+/** Save the current project in GB Studio 4.2.2 split-resource format */
 export function saveProjectToDisk(): string {
   const project = requireProject();
   if (!currentProjectPath) throw new Error("No project path set.");
-  const dir = path.dirname(currentProjectPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(currentProjectPath, JSON.stringify(project, null, 2), "utf-8");
+
+  const projectDir = path.dirname(currentProjectPath);
+  const resDir = path.join(projectDir, "project");
+
+  // 1. Write project.gbsproj (root metadata only)
+  writeJson(currentProjectPath, {
+    _resourceType: "project",
+    name: project.name,
+    author: project.author,
+    notes: project.notes,
+    _version: project._version,
+    _release: project._release,
+  });
+
+  // 2. Write project/settings.gbsres
+  writeJson(path.join(resDir, "settings.gbsres"), project.settings);
+
+  // 3. Write project/variables.gbsres
+  writeJson(path.join(resDir, "variables.gbsres"), {
+    _resourceType: "variables",
+    variables: project.variables,
+    constants: project.constants || [],
+  });
+
+  // 4. Write project/engine_field_values.gbsres
+  writeJson(path.join(resDir, "engine_field_values.gbsres"), {
+    _resourceType: "engineFieldValues",
+    engineFieldValues: project.engineFieldValues,
+  });
+
+  // 5. Write palettes
+  for (const pal of project.palettes) {
+    const palName = pal.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "");
+    writeJson(path.join(resDir, "palettes", `${palName}.gbsres`), pal);
+  }
+
+  // 6. Write scenes (each scene in its own directory)
+  for (const scene of project.scenes) {
+    const sceneDirName = scene.symbol.replace(/^scene_/, "") || scene.id;
+    const sceneDir = path.join(resDir, "scenes", sceneDirName);
+
+    // Scene .gbsres (without actors/triggers - they're separate files)
+    const { actors, triggers, ...sceneData } = scene;
+    writeJson(path.join(sceneDir, "scene.gbsres"), sceneData);
+
+    // Actors
+    for (const actor of actors) {
+      const actorName = actor.symbol.replace(/^actor_/, "") || actor.id;
+      writeJson(path.join(sceneDir, "actors", `${actorName}.gbsres`), actor);
+    }
+
+    // Triggers
+    for (const trigger of triggers) {
+      const triggerName = trigger.symbol.replace(/^trigger_/, "") || trigger.id;
+      writeJson(path.join(sceneDir, "triggers", `${triggerName}.gbsres`), trigger);
+    }
+  }
+
+  // 7. Write background .gbsres files
+  for (const bg of project.backgrounds) {
+    writeJson(path.join(projectDir, "assets", "backgrounds", `${bg.filename}.gbsres`), bg);
+  }
+
+  // 8. Write sprite .gbsres files
+  for (const sprite of project.spriteSheets) {
+    writeJson(path.join(projectDir, "assets", "sprites", `${sprite.filename}.gbsres`), sprite);
+  }
+
   return currentProjectPath;
 }
 
-/**
- * Load a GB Studio project from a `.gbsproj` file on disk.
- * Sets it as the current in-memory project.
- *
- * @param filePath - Path to the .gbsproj file
- * @returns The loaded project
- * @throws {Error} If the file does not exist or is not valid JSON
- *
- * @example
- * const project = loadProjectFromDisk("C:/games/MyRPG/MyRPG.gbsproj");
- * console.log(project.scenes.length); // number of scenes
- */
+/** Load a GB Studio 4.2.2 project from its split-resource files */
 export function loadProjectFromDisk(filePath: string): GBSProject {
   const abs = path.resolve(filePath);
   if (!fs.existsSync(abs)) throw new Error(`File not found: ${abs}`);
-  const data = JSON.parse(fs.readFileSync(abs, "utf-8"));
-  currentProject = data as GBSProject;
+
+  const projectDir = path.dirname(abs);
+  const resDir = path.join(projectDir, "project");
+
+  // Read root
+  const root = JSON.parse(fs.readFileSync(abs, "utf-8"));
+
+  // Read settings
+  const settingsPath = path.join(resDir, "settings.gbsres");
+  const settings = fs.existsSync(settingsPath) ? JSON.parse(fs.readFileSync(settingsPath, "utf-8")) : {};
+
+  // Read variables
+  const varsPath = path.join(resDir, "variables.gbsres");
+  const varsData = fs.existsSync(varsPath) ? JSON.parse(fs.readFileSync(varsPath, "utf-8")) : { variables: [], constants: [] };
+
+  // Read engine field values
+  const efvPath = path.join(resDir, "engine_field_values.gbsres");
+  const efvData = fs.existsSync(efvPath) ? JSON.parse(fs.readFileSync(efvPath, "utf-8")) : { engineFieldValues: [] };
+
+  // Read palettes
+  const palettes: Palette[] = [];
+  const palDir = path.join(resDir, "palettes");
+  if (fs.existsSync(palDir)) {
+    for (const f of fs.readdirSync(palDir).filter(f => f.endsWith(".gbsres"))) {
+      palettes.push(JSON.parse(fs.readFileSync(path.join(palDir, f), "utf-8")));
+    }
+  }
+
+  // Read scenes
+  const scenes: Scene[] = [];
+  const scenesDir = path.join(resDir, "scenes");
+  if (fs.existsSync(scenesDir)) {
+    const readScenesRecursive = (dir: string) => {
+      if (fs.existsSync(path.join(dir, "scene.gbsres"))) {
+        const sceneData = JSON.parse(fs.readFileSync(path.join(dir, "scene.gbsres"), "utf-8"));
+        sceneData.actors = [];
+        sceneData.triggers = [];
+
+        // Read actors
+        const actorsDir = path.join(dir, "actors");
+        if (fs.existsSync(actorsDir)) {
+          for (const f of fs.readdirSync(actorsDir).filter(f => f.endsWith(".gbsres"))) {
+            sceneData.actors.push(JSON.parse(fs.readFileSync(path.join(actorsDir, f), "utf-8")));
+          }
+          sceneData.actors.sort((a: any, b: any) => (a._index ?? 0) - (b._index ?? 0));
+        }
+
+        // Read triggers
+        const triggersDir = path.join(dir, "triggers");
+        if (fs.existsSync(triggersDir)) {
+          for (const f of fs.readdirSync(triggersDir).filter(f => f.endsWith(".gbsres"))) {
+            sceneData.triggers.push(JSON.parse(fs.readFileSync(path.join(triggersDir, f), "utf-8")));
+          }
+          sceneData.triggers.sort((a: any, b: any) => (a._index ?? 0) - (b._index ?? 0));
+        }
+
+        scenes.push(sceneData);
+      }
+
+      // Recurse into subdirectories (for nested scene paths)
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory() && entry.name !== "actors" && entry.name !== "triggers") {
+          readScenesRecursive(path.join(dir, entry.name));
+        }
+      }
+    };
+    readScenesRecursive(scenesDir);
+    scenes.sort((a, b) => (a._index ?? 0) - (b._index ?? 0));
+  }
+
+  // Read backgrounds
+  const backgrounds: Background[] = [];
+  const bgDir = path.join(projectDir, "assets", "backgrounds");
+  if (fs.existsSync(bgDir)) {
+    for (const f of fs.readdirSync(bgDir).filter(f => f.endsWith(".png.gbsres"))) {
+      backgrounds.push(JSON.parse(fs.readFileSync(path.join(bgDir, f), "utf-8")));
+    }
+  }
+
+  // Read sprites
+  const spriteSheets: SpriteSheet[] = [];
+  const spriteDir = path.join(projectDir, "assets", "sprites");
+  if (fs.existsSync(spriteDir)) {
+    for (const f of fs.readdirSync(spriteDir).filter(f => f.endsWith(".png.gbsres"))) {
+      spriteSheets.push(JSON.parse(fs.readFileSync(path.join(spriteDir, f), "utf-8")));
+    }
+  }
+
+  const project: GBSProject = {
+    _resourceType: "project",
+    name: root.name,
+    author: root.author,
+    notes: root.notes || "",
+    _version: root._version,
+    _release: root._release,
+    scenes,
+    backgrounds,
+    spriteSheets,
+    palettes,
+    music: [],
+    variables: varsData.variables || [],
+    constants: varsData.constants || [],
+    settings,
+    engineFieldValues: efvData.engineFieldValues || [],
+  };
+
+  currentProject = project;
   currentProjectPath = abs;
-  return currentProject;
+  return project;
 }
 
-/**
- * Find a scene by ID in the current project.
- *
- * @param sceneId - UUID of the scene to find
- * @returns The matching scene
- * @throws {Error} If no project is loaded or scene is not found
- */
+// ─── Finders ─────────────────────────────────────────────────────────────────
+
 export function findScene(sceneId: string): Scene {
   const p = requireProject();
   const s = p.scenes.find((s) => s.id === sceneId);
@@ -440,50 +728,18 @@ export function findScene(sceneId: string): Scene {
   return s;
 }
 
-/**
- * Find an actor by ID within a scene.
- *
- * @param scene - The scene to search
- * @param actorId - UUID of the actor to find
- * @returns The matching actor
- * @throws {Error} If actor is not found in the scene
- */
 export function findActor(scene: Scene, actorId: string): Actor {
   const a = scene.actors.find((a) => a.id === actorId);
   if (!a) throw new Error(`Actor not found: ${actorId} in scene ${scene.name}`);
   return a;
 }
 
-/**
- * Find a trigger by ID within a scene.
- *
- * @param scene - The scene to search
- * @param triggerId - UUID of the trigger to find
- * @returns The matching trigger
- * @throws {Error} If trigger is not found in the scene
- */
 export function findTrigger(scene: Scene, triggerId: string): Trigger {
   const t = scene.triggers.find((t) => t.id === triggerId);
   if (!t) throw new Error(`Trigger not found: ${triggerId} in scene ${scene.name}`);
   return t;
 }
 
-/**
- * Resolve a script array from a target type, target ID, and script type.
- * Used by script tools to find the correct script array to modify.
- *
- * @param target - Target type: "scene", "actor", or "trigger"
- * @param targetId - UUID of the target entity
- * @param scriptType - Name of the script array (e.g. "script", "startScript", "updateScript")
- * @param sceneId - Scene UUID (required for actor and trigger targets)
- * @returns Object with the owner entity and the script key name
- * @throws {Error} If target type is invalid, target not found, or script type doesn't exist
- *
- * @example
- * // Get the interaction script array for an actor
- * const { owner, scriptKey } = resolveScriptTarget("actor", actorId, "script", sceneId);
- * owner[scriptKey].push(newEvent);
- */
 export function resolveScriptTarget(
   target: string,
   targetId: string,

@@ -1,0 +1,13 @@
+{
+  "_resourceType": "background",
+  "id": "40aadb23-32d4-4607-b68f-6c19de141e95",
+  "name": "entrance_hall",
+  "symbol": "bg_entrance_hall",
+  "filename": "entrance_hall.png",
+  "width": 20,
+  "height": 18,
+  "imageWidth": 160,
+  "imageHeight": 144,
+  "tileColors": "",
+  "autoColor": false
+}

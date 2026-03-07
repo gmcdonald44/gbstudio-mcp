@@ -1,221 +1,179 @@
 /**
- * Direct handler test — bypasses MCP protocol, tests core logic
+ * Direct tool handler test for gbstudio-mcp — tests MCP tool interface.
  */
-import { createRequire } from 'module';
-import { readFileSync, existsSync, rmSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { projectTools } from "./dist/tools/project.js";
+import { sceneTools } from "./dist/tools/scenes.js";
+import { actorTools } from "./dist/tools/actors.js";
+import { triggerTools } from "./dist/tools/triggers.js";
+import { scriptTools } from "./dist/tools/scripts.js";
+import { variableTools } from "./dist/tools/variables.js";
+import * as fs from "fs";
+import * as path from "path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
+const TEST_DIR = path.join(process.cwd(), "test-direct-output");
+if (fs.existsSync(TEST_DIR)) fs.rmSync(TEST_DIR, { recursive: true, force: true });
 
-// Import compiled JS directly
-const { projectTools } = await import('./dist/tools/project.js');
-const { sceneTools }   = await import('./dist/tools/scenes.js');
-const { actorTools }   = await import('./dist/tools/actors.js');
-const { triggerTools } = await import('./dist/tools/triggers.js');
-const { scriptTools }  = await import('./dist/tools/scripts.js');
-const { variableTools } = await import('./dist/tools/variables.js');
-
-const OUTPUT_DIR = join(__dirname, 'test-output');
-const OUTPUT_FILE = join(OUTPUT_DIR, 'TestGame.gbsproj');
-
-// Clean up old test output
-if (existsSync(OUTPUT_FILE)) rmSync(OUTPUT_FILE);
-
-let pass = 0, fail = 0;
+let passed = 0, failed = 0;
 
 async function test(name, fn) {
   try {
     await fn();
-    console.log(`  ✅ ${name}`);
-    pass++;
+    passed++;
+    console.log(`✓ ${name}`);
   } catch (e) {
-    console.log(`  ❌ ${name}: ${e.message}`);
-    fail++;
+    failed++;
+    console.error(`✗ ${name}: ${e.message}`);
   }
 }
 
-function txt(resp) {
-  return resp?.content?.[0]?.text || '';
-}
+function assert(cond, msg) { if (!cond) throw new Error(msg); }
+function getText(result) { return result.content[0].text; }
 
-console.log('🎮 GB Studio MCP — Direct Handler Test\n');
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
-// ── PROJECT ────────────────────────────────────────────────────────────────
-console.log('📁 Project');
-
-await test('create_project', async () => {
-  const r = await projectTools.create_project.handler({ name: 'TestGame', author: 'Hal', path: OUTPUT_DIR });
-  const t = txt(r);
-  if (!t.includes('TestGame')) throw new Error(`Got: ${t}`);
+await test("create_project creates split-resource format", async () => {
+  const r = await projectTools.create_project.handler({
+    name: "TestProject", author: "Tester", path: TEST_DIR,
+  });
+  const text = getText(r);
+  assert(text.includes("Project created"), "should say created");
+  assert(text.includes("4.2.2"), "should mention format" + text); // Actually mentions "split-resource"
+  assert(fs.existsSync(path.join(TEST_DIR, "TestProject.gbsproj")), ".gbsproj exists");
+  assert(fs.existsSync(path.join(TEST_DIR, "project/settings.gbsres")), "settings.gbsres exists");
 });
 
-await test('get_project_info', async () => {
-  const r = await projectTools.get_project_info.handler({});
-  const t = txt(r);
-  if (!t.includes('TestGame')) throw new Error(`Got: ${t}`);
+await test("add_background registers background", async () => {
+  const r = await projectTools.add_background.handler({
+    name: "dungeon", filename: "dungeon.png", width: 20, height: 18, imageWidth: 160, imageHeight: 144,
+  });
+  assert(getText(r).includes("Background added"), "should confirm add");
 });
 
-// ── VARIABLES ──────────────────────────────────────────────────────────────
-console.log('\n📊 Variables');
-let varId;
-
-await test('add_variable', async () => {
-  const r = await variableTools.add_variable.handler({ name: 'hasSword' });
-  const t = txt(r);
-  if (!t.includes('hasSword')) throw new Error(`Got: ${t}`);
-  const m = t.match(/\(([^)]+)\)/);
-  varId = m?.[1];
+await test("add_sprite registers sprite", async () => {
+  const r = await projectTools.add_sprite.handler({
+    name: "hero", filename: "hero.png", type: "static",
+  });
+  assert(getText(r).includes("Sprite added"), "should confirm add");
 });
 
-await test('list_variables', async () => {
-  const r = await variableTools.list_variables.handler({});
-  const t = txt(r);
-  if (!t.includes('hasSword')) throw new Error(`Got: ${t}`);
+let sceneId, bgId, spriteId;
+
+await test("add_scene creates scene with correct format", async () => {
+  // Get bg id from project
+  const { requireProject } = await import("./dist/project.js");
+  const p = requireProject();
+  bgId = p.backgrounds[0].id;
+  spriteId = p.spriteSheets[0].id;
+
+  const r = await sceneTools.add_scene.handler({
+    name: "Test Room", backgroundId: bgId,
+  });
+  const text = getText(r);
+  assert(text.includes("Scene added"), "should confirm add");
+  sceneId = text.match(/\(([a-f0-9-]+)\)/)?.[1];
+  assert(sceneId, "should return scene ID");
 });
 
-// ── SCENES ────────────────────────────────────────────────────────────────
-console.log('\n🗺  Scenes');
-let townId, dungeonId;
+let actorId;
 
-await test('add_scene (Town)', async () => {
-  const r = await sceneTools.add_scene.handler({ name: 'Town Square', width: 20, height: 18 });
-  const t = txt(r);
-  if (!t.includes('Town Square')) throw new Error(`Got: ${t}`);
-  const m = t.match(/\(([^)]+)\)/);
-  townId = m?.[1];
+await test("add_actor creates actor with 4.2.2 fields", async () => {
+  const r = await actorTools.add_actor.handler({
+    sceneId, name: "Guard", x: 5, y: 3, spriteSheetId: spriteId,
+  });
+  actorId = getText(r).match(/\(([a-f0-9-]+)\)/)?.[1];
+  assert(actorId, "should return actor ID");
+
+  const r2 = await actorTools.get_actor.handler({ sceneId, actorId });
+  const actor = JSON.parse(getText(r2));
+  assert(actor._resourceType === "actor", "_resourceType");
+  assert(actor.coordinateType === "tiles", "coordinateType");
+  assert(actor.prefabId === "", "prefabId");
+  assert(actor.animSpeed === 15, "animSpeed");
 });
 
-await test('add_scene (Dungeon)', async () => {
-  const r = await sceneTools.add_scene.handler({ name: 'Dungeon Entrance', width: 16, height: 14 });
-  const t = txt(r);
-  if (!t.includes('Dungeon')) throw new Error(`Got: ${t}`);
-  const m = t.match(/\(([^)]+)\)/);
-  dungeonId = m?.[1];
-});
-
-await test('list_scenes', async () => {
-  const r = await sceneTools.list_scenes.handler({});
-  const t = txt(r);
-  if (!t.includes('Town Square')) throw new Error(`Got: ${t}`);
-});
-
-await test('get_scene', async () => {
-  const r = await sceneTools.get_scene.handler({ sceneId: townId });
-  const t = txt(r);
-  if (!t.includes('Town')) throw new Error(`Got: ${t.slice(0,100)}`);
-});
-
-// ── ACTORS ────────────────────────────────────────────────────────────────
-console.log('\n🧙 Actors');
-let shopkeeperId;
-
-await test('add_actor', async () => {
-  const r = await actorTools.add_actor.handler({ sceneId: townId, name: 'Shopkeeper', x: 5, y: 8, direction: 'down' });
-  const t = txt(r);
-  if (!t.includes('Shopkeeper')) throw new Error(`Got: ${t}`);
-  const m = t.match(/\(([^)]+)\)/);
-  shopkeeperId = m?.[1];
-});
-
-await test('list_actors', async () => {
-  const r = await actorTools.list_actors.handler({ sceneId: townId });
-  const t = txt(r);
-  if (!t.includes('Shopkeeper')) throw new Error(`Got: ${t}`);
-});
-
-await test('update_actor', async () => {
-  const r = await actorTools.update_actor.handler({ sceneId: townId, actorId: shopkeeperId, updates: { x: 6 } });
-  if (!txt(r)) throw new Error('No response');
-});
-
-// ── TRIGGERS ──────────────────────────────────────────────────────────────
-console.log('\n🚪 Triggers');
 let triggerId;
 
-await test('add_trigger', async () => {
-  const r = await triggerTools.add_trigger.handler({ sceneId: townId, name: 'Dungeon Door', x: 10, y: 15, width: 2, height: 1 });
-  const t = txt(r);
-  if (!t.includes('Dungeon Door')) throw new Error(`Got: ${t}`);
-  const m = t.match(/\(([^)]+)\)/);
-  triggerId = m?.[1];
-});
-
-// ── SCRIPTS ───────────────────────────────────────────────────────────────
-console.log('\n📜 Scripts');
-
-await test('add dialogue to shopkeeper', async () => {
-  const r = await scriptTools.add_script_event.handler({
-    target: 'actor', targetId: shopkeeperId, sceneId: townId,
-    scriptType: 'script', command: 'EVENT_DIALOGUE',
-    args: { text: 'Welcome traveler! Buy a sword for 10 gold?' }
+await test("add_trigger creates trigger with 4.2.2 fields", async () => {
+  const r = await triggerTools.add_trigger.handler({
+    sceneId, name: "Door", x: 1, y: 1, width: 2, height: 1,
   });
-  if (!txt(r)) throw new Error('No response');
+  triggerId = getText(r).match(/\(([a-f0-9-]+)\)/)?.[1];
+  assert(triggerId, "should return trigger ID");
 });
 
-await test('add scene switch to trigger', async () => {
+await test("add_script_event adds EVENT_TEXT", async () => {
   const r = await scriptTools.add_script_event.handler({
-    target: 'trigger', targetId: triggerId, sceneId: townId,
-    scriptType: 'script', command: 'EVENT_SCENE_SWITCH',
-    args: { sceneId: dungeonId, x: 1, y: 1, direction: 'down', fadeSpeed: 2 }
+    target: "actor", targetId: actorId, sceneId,
+    scriptType: "script",
+    command: "EVENT_TEXT",
+    args: { text: "Halt! Who goes there?" },
   });
-  if (!txt(r)) throw new Error('No response');
+  assert(getText(r).includes("EVENT_TEXT"), "should confirm event");
 });
 
-await test('get_script', async () => {
-  const r = await scriptTools.get_script.handler({ target: 'actor', targetId: shopkeeperId, sceneId: townId, scriptType: 'script' });
-  const t = txt(r);
-  if (!t.includes('DIALOGUE') && !t.includes('sword')) throw new Error(`Got: ${t.slice(0,100)}`);
+await test("add_script_event adds EVENT_IF with children", async () => {
+  const r = await scriptTools.add_script_event.handler({
+    target: "actor", targetId: actorId, sceneId,
+    scriptType: "script",
+    command: "EVENT_IF",
+    args: {
+      condition: {
+        type: "eq",
+        valueA: { type: "variable", value: "0" },
+        valueB: { type: "number", value: 1 },
+      },
+    },
+    children: {
+      true: [{ command: "EVENT_TEXT", args: { text: "You may pass." } }],
+      false: [{ command: "EVENT_TEXT", args: { text: "Go away!" } }],
+    },
+  });
+  assert(getText(r).includes("EVENT_IF"), "should confirm event");
+
+  // Verify the event has __type
+  const script = await scriptTools.get_script.handler({
+    target: "actor", targetId: actorId, sceneId, scriptType: "script",
+  });
+  const events = JSON.parse(getText(script));
+  const ifEvent = events.find(e => e.command === "EVENT_IF");
+  assert(ifEvent.__type === "event", "EVENT_IF should have __type: event");
+  assert(ifEvent.children.true.length === 1, "true branch has 1 event");
+  assert(ifEvent.children.false.length === 1, "false branch has 1 event");
 });
 
-// ── SAVE & VALIDATE ────────────────────────────────────────────────────────
-console.log('\n💾 Save & Validate');
+await test("add_variable uses numeric string IDs", async () => {
+  const r = await variableTools.add_variable.handler({ name: "Has Key" });
+  assert(getText(r).includes("id: 0"), "first var should be id 0");
 
-await test('save_project', async () => {
+  const r2 = await variableTools.add_variable.handler({ name: "Gold Count" });
+  assert(getText(r2).includes("id: 1"), "second var should be id 1");
+});
+
+await test("save_project writes split-resource files", async () => {
   const r = await projectTools.save_project.handler({});
-  const t = txt(r);
-  if (!t.toLowerCase().includes('saved') && !t.toLowerCase().includes('project')) throw new Error(`Got: ${t}`);
+  assert(getText(r).includes("saved"), "should confirm save");
+
+  // Verify scene file
+  const sceneFiles = [];
+  const walkDir = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (f.isDirectory()) walkDir(path.join(dir, f.name));
+      else if (f.name === "scene.gbsres") sceneFiles.push(path.join(dir, f.name));
+    }
+  };
+  walkDir(path.join(TEST_DIR, "project/scenes"));
+  assert(sceneFiles.length === 1, "1 scene.gbsres file");
+
+  const sceneData = JSON.parse(fs.readFileSync(sceneFiles[0], "utf-8"));
+  assert(sceneData._resourceType === "scene", "scene _resourceType");
+  assert(!sceneData.actors, "scene file should NOT contain actors (separate files)");
 });
 
-await test('file exists on disk', () => {
-  if (!existsSync(OUTPUT_FILE)) throw new Error(`Not found: ${OUTPUT_FILE}`);
-});
+// ─── Results ─────────────────────────────────────────────────────────────────
 
-await test('valid JSON', () => {
-  JSON.parse(readFileSync(OUTPUT_FILE, 'utf-8'));
-});
+console.log(`\n${"=".repeat(40)}`);
+console.log(`Tests: ${passed} passed, ${failed} failed`);
+if (failed > 0) process.exit(1);
 
-await test('correct GB Studio schema', () => {
-  const proj = JSON.parse(readFileSync(OUTPUT_FILE, 'utf-8'));
-  ['name','scenes','variables','settings','backgrounds','spriteSheets'].forEach(k => {
-    if (!(k in proj)) throw new Error(`Missing key: ${k}`);
-  });
-  if (proj.name !== 'TestGame') throw new Error(`Wrong name: ${proj.name}`);
-  if (proj.scenes.length < 2) throw new Error(`Expected 2+ scenes, got ${proj.scenes.length}`);
-  const town = proj.scenes.find(s => s.name?.includes('Town'));
-  if (!town) throw new Error('Town scene missing');
-  if (!town.actors?.length) throw new Error('No actors in Town');
-  const shopkeeper = town.actors.find(a => a.name === 'Shopkeeper');
-  if (!shopkeeper) throw new Error('Shopkeeper missing');
-  const dialogue = shopkeeper.script?.find(e => e.command === 'EVENT_DIALOGUE');
-  if (!dialogue) throw new Error('No dialogue on shopkeeper');
-  if (!dialogue.args?.text?.includes('sword')) throw new Error('Wrong dialogue text');
-  const trig = town.triggers?.find(t => t.name?.includes('Dungeon'));
-  if (!trig) throw new Error('Dungeon trigger missing');
-  const sw = trig.script?.find(e => e.command === 'EVENT_SCENE_SWITCH');
-  if (!sw) throw new Error('No scene switch on trigger');
-  console.log(`    → Scenes: ${proj.scenes.length} | Actors: ${town.actors.length} | Variables: ${proj.variables.length}`);
-});
-
-// ── SUMMARY ───────────────────────────────────────────────────────────────
-console.log('\n' + '─'.repeat(50));
-console.log(`Results: ${pass} passed, ${fail} failed`);
-if (fail === 0) {
-  console.log('✅ All core logic tests pass!');
-  console.log(`\n📄 Sample .gbsproj: ${OUTPUT_FILE}`);
-  console.log('\n⚠️  Note: MCP protocol layer has an argument-passing issue.');
-  console.log('   Core handlers work correctly. Fix needed in server.tool() registration.');
-} else {
-  process.exit(1);
-}
+fs.rmSync(TEST_DIR, { recursive: true, force: true });

@@ -1,0 +1,33 @@
+{
+  "_resourceType": "trigger",
+  "id": "1d359f1c-6788-4fb8-9107-d0501faf45e3",
+  "_index": 0,
+  "symbol": "trigger_stairs_back",
+  "prefabId": "",
+  "name": "Stairs Back",
+  "x": 4,
+  "y": 17,
+  "width": 2,
+  "height": 1,
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "7616c58a-46a2-4907-b78b-ed47c7c0e2b8",
+      "command": "EVENT_SWITCH_SCENE",
+      "args": {
+        "sceneId": "92c52829-c008-4f13-b1de-e5688499dbb1",
+        "x": {
+          "type": "number",
+          "value": 4
+        },
+        "y": {
+          "type": "number",
+          "value": 1
+        },
+        "direction": "down",
+        "fadeSpeed": "2"
+      }
+    }
+  ],
+  "leaveScript": []
+}

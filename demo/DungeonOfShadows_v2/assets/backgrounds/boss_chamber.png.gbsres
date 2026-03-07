@@ -1,0 +1,13 @@
+{
+  "_resourceType": "background",
+  "id": "bdb88603-28d8-4202-8b52-1ecad0714d47",
+  "name": "boss_chamber",
+  "symbol": "bg_boss_chamber",
+  "filename": "boss_chamber.png",
+  "width": 20,
+  "height": 18,
+  "imageWidth": 160,
+  "imageHeight": 144,
+  "tileColors": "",
+  "autoColor": false
+}

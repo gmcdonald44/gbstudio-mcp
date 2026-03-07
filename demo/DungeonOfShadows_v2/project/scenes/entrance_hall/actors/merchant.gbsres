@@ -1,0 +1,54 @@
+{
+  "_resourceType": "actor",
+  "id": "26ea4ef8-bdd7-453a-82f0-89cebdd6b5e6",
+  "_index": 0,
+  "symbol": "actor_merchant",
+  "prefabId": "",
+  "name": "Merchant",
+  "coordinateType": "tiles",
+  "x": 7,
+  "y": 4,
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "244eef77-efe4-4b62-b39f-3c2fc49c54cc",
+  "paletteId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "2dc970ca-609f-43a0-9031-955f30a59ab7",
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": "Welcome, adventurer!\nI sell swords and\npotions."
+      }
+    },
+    {
+      "id": "2e90089f-eb6b-4ca4-bcb7-22f1ac4c1c4b",
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": "The dungeon below\nis dangerous.\nBe careful!"
+      }
+    },
+    {
+      "id": "c59de925-642d-4ff9-89f2-936bc408ca04",
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "1",
+        "value": {
+          "type": "true"
+        }
+      }
+    }
+  ],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}
