@@ -95,11 +95,21 @@ export const scriptTools = {
     }) => {
       const { owner, scriptKey } = resolveScriptTarget(args.target, args.targetId, args.scriptType, args.sceneId);
 
+      // Normalize args for commands that require typed values
+      const rawArgs = { ...(args.args || {}) };
+      if (args.command === "EVENT_SWITCH_SCENE") {
+        if (typeof rawArgs.sceneId === "string") rawArgs.sceneId = { type: "scene", value: rawArgs.sceneId };
+        if (typeof rawArgs.x === "number") rawArgs.x = { type: "number", value: rawArgs.x };
+        if (typeof rawArgs.y === "number") rawArgs.y = { type: "number", value: rawArgs.y };
+        if (typeof rawArgs.fadeSpeed === "number") rawArgs.fadeSpeed = { type: "number", value: rawArgs.fadeSpeed };
+        if (typeof rawArgs.direction === "string") rawArgs.direction = { type: "direction", value: rawArgs.direction };
+      }
+
       // Build the event with proper IDs
       const event: ScriptEvent = {
         id: uuid(),
         command: args.command,
-        args: args.args || {},
+        args: rawArgs,
       };
 
       if (args.children) {

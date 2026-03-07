@@ -548,6 +548,13 @@ export function saveProjectToDisk(): string {
   });
 
   // 2. Write project/settings.gbsres
+  // Auto-assign first sprite sheet as default player sprite for TOPDOWN scenes
+  if (project.spriteSheets.length > 0 && !project.settings.defaultPlayerSprites?.TOPDOWN) {
+    project.settings.defaultPlayerSprites = {
+      ...project.settings.defaultPlayerSprites,
+      TOPDOWN: project.spriteSheets[0].id,
+    };
+  }
   writeJson(path.join(resDir, "settings.gbsres"), project.settings);
 
   // 3. Write project/variables.gbsres
