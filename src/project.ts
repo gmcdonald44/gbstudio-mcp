@@ -219,7 +219,7 @@ export interface Variable {
 /**
  * @interface Palette
  * @description A color palette for Game Boy rendering. Each palette contains
- * arrays of 4 hex color strings (darkest to lightest).
+ * arrays of 4 hex color strings (lightest to darkest).
  */
 export interface Palette {
   id: string;

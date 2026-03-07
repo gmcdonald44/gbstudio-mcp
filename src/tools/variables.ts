@@ -59,4 +59,30 @@ export const variableTools = {
       return { content: [{ type: "text" as const, text: JSON.stringify(p.variables, null, 2) }] };
     },
   },
+
+  /**
+   * @description Delete a global variable from the project.
+   * Note: This does not remove references to the variable in scripts — those should be cleaned up separately.
+   *
+   * @param args.variableId - UUID of the variable to delete (required)
+   * @returns MCP response confirming the deletion
+   * @throws {Error} If variable not found
+   */
+  delete_variable: {
+    description: "Delete a global variable from the project",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        variableId: { type: "string", description: "Variable UUID" },
+      },
+      required: ["variableId"],
+    },
+    handler: async (args: { variableId: string }) => {
+      const p = requireProject();
+      const idx = p.variables.findIndex((v) => v.id === args.variableId);
+      if (idx === -1) throw new Error(`Variable not found: ${args.variableId}`);
+      const removed = p.variables.splice(idx, 1)[0];
+      return { content: [{ type: "text" as const, text: `Variable deleted: "${removed.name}"` }] };
+    },
+  },
 };

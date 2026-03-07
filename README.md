@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 18+](https://img.shields.io/badge/node-18%2B-brightgreen.svg)](https://nodejs.org/)
 ![Tests](https://img.shields.io/badge/tests-26%2F26%20passing-brightgreen)
+![Tools](https://img.shields.io/badge/tools-24-blue)
 
 **Describe a Game Boy game in plain English. Get a playable `.gbsproj` file.**
 
@@ -47,7 +48,7 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop. The 20 gbstudio tools will appear in the 🔌 tools panel.
+Restart Claude Desktop. The 24 gbstudio tools will appear in the 🔌 tools panel.
 
 📖 **Full setup guide with troubleshooting:** [docs/claude-desktop-setup.md](docs/claude-desktop-setup.md)
 
@@ -89,6 +90,7 @@ Works with any MCP-compatible client — Cursor, Zed, OpenClaw, or your own. Use
 
 | Tool | Description |
 |------|-------------|
+| `list_triggers` | List triggers in a scene |
 | `add_trigger` | Add a trigger zone to a scene |
 | `update_trigger` | Modify trigger properties |
 | `delete_trigger` | Remove a trigger |
@@ -98,8 +100,8 @@ Works with any MCP-compatible client — Cursor, Zed, OpenClaw, or your own. Use
 | Tool | Description |
 |------|-------------|
 | `add_script_event` | Add a script event (dialogue, scene switch, conditional, etc.) |
-| `clear_script` | Remove all events from a script |
 | `get_script` | View the current script on an entity |
+| `clear_script` | Remove all events from a script |
 
 ### Variables
 
@@ -107,6 +109,7 @@ Works with any MCP-compatible client — Cursor, Zed, OpenClaw, or your own. Use
 |------|-------------|
 | `add_variable` | Create a new game variable |
 | `list_variables` | List all variables |
+| `delete_variable` | Remove a variable |
 
 ### Build
 

@@ -26,25 +26,30 @@ Open an issue with:
 ## Adding a New Tool
 
 1. Create or edit the relevant file in `src/tools/` (group by domain: scenes, actors, etc.)
-2. Define your tool with a clear `name`, `description`, and `inputSchema` using JSON Schema
-3. Register it in `src/index.ts` by adding it to the tool list and the request handler
+2. Add your tool to the module's exported record with a `description`, `inputSchema`, and `handler`
+3. If you created a **new file**, import and spread it in `src/index.ts`'s `allTools` object
 4. Keep tool descriptions concise but specific — they're the AI's documentation
-5. Run `npm run build` to verify
+5. Run `npm run build && node test.mjs` to verify
 
-Pattern to follow:
+Pattern to follow (tools are keyed by name in the record):
 
 ```typescript
-{
-  name: "my_new_tool",
-  description: "One-line description of what it does",
-  inputSchema: {
-    type: "object",
-    properties: {
-      param: { type: "string", description: "What this param controls" }
+export const myTools = {
+  my_new_tool: {
+    description: "One-line description of what it does",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        param: { type: "string", description: "What this param controls" }
+      },
+      required: ["param"]
     },
-    required: ["param"]
+    handler: async (args: { param: string }) => {
+      // ... your logic ...
+      return { content: [{ type: "text" as const, text: "Result" }] };
+    }
   }
-}
+};
 ```
 
 ## Questions?

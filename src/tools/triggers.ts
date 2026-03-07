@@ -9,6 +9,27 @@ import type { Trigger } from "../project.js";
 
 export const triggerTools = {
   /**
+   * @description List all triggers in a scene with their positions and dimensions.
+   *
+   * @param args.sceneId - UUID of the scene
+   * @returns MCP response with JSON array of trigger summaries
+   * @throws {Error} If scene not found
+   */
+  list_triggers: {
+    description: "List all triggers in a scene",
+    inputSchema: {
+      type: "object" as const,
+      properties: { sceneId: { type: "string" } },
+      required: ["sceneId"],
+    },
+    handler: async (args: { sceneId: string }) => {
+      const scene = findScene(args.sceneId);
+      const list = scene.triggers.map((t) => ({ id: t.id, name: t.name, x: t.x, y: t.y, width: t.width, height: t.height }));
+      return { content: [{ type: "text" as const, text: JSON.stringify(list, null, 2) }] };
+    },
+  },
+
+  /**
    * @description Add a trigger zone to a scene. The trigger starts with empty script arrays
    * that can be populated with add_script_event.
    *

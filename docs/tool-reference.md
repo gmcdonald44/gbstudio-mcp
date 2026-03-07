@@ -1,6 +1,6 @@
 # Tool Reference
 
-Complete reference for all 20 tools in the GB Studio MCP server.
+Complete reference for all 24 tools in the GB Studio MCP server.
 
 ---
 
@@ -273,6 +273,22 @@ Remove an actor from a scene.
 ---
 
 ## Triggers
+
+### `list_triggers`
+
+List all triggers in a scene.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sceneId` | string | ✅ | Scene UUID |
+
+**Returns:** JSON array of `{ id, name, x, y, width, height }`.
+
+```json
+{ "name": "list_triggers", "arguments": { "sceneId": "scene-uuid" } }
+```
+
+---
 
 ### `add_trigger`
 

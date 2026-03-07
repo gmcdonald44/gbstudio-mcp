@@ -82,13 +82,13 @@ Fully quit and relaunch Claude Desktop. On first launch it starts the MCP server
 
 ## Step 4 — Verify the Connection
 
-In Claude Desktop, look for the 🔌 tools icon in the chat input. Click it — you should see all 20 gbstudio tools listed:
+In Claude Desktop, look for the 🔌 tools icon in the chat input. Click it — you should see all 24 gbstudio tools listed:
 
-- `create_project`, `get_project_info`, `save_project`
+- `create_project`, `open_project`, `get_project_info`, `save_project`
 - `add_scene`, `get_scene`, `list_scenes`, `update_scene`, `delete_scene`
 - `add_actor`, `list_actors`, `update_actor`, `delete_actor`
-- `add_trigger`, `update_trigger`, `delete_trigger`
-- `add_script_event`, `get_script`
+- `list_triggers`, `add_trigger`, `update_trigger`, `delete_trigger`
+- `add_script_event`, `get_script`, `clear_script`
 - `add_variable`, `list_variables`
 - `build_rom`
 

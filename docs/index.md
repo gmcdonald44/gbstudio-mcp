@@ -13,4 +13,4 @@ Welcome to the docs for `gbstudio-mcp`, the MCP server that lets AI assistants c
 
 ## Prompt Examples
 
-Not sure what to say? The **[prompts/](../prompts/README.md)** library has 47 natural-language examples across 7 user personas — sprite artists, developers, storytellers, educators, game jammers, and more.
+Not sure what to say? The **[prompts/](../prompts/README.md)** library has 12 natural-language examples across 2 buckets — whether you have art assets or not.
