@@ -111,8 +111,12 @@ export const scriptTools = {
         rawArgs.direction = wrapDir(rawArgs.direction);
       }
       if (args.command === "EVENT_SET_VALUE" || args.command === "EVENT_IF") {
-        rawArgs.variable = wrapVar(rawArgs.variable);
-        rawArgs.value    = wrapNum(rawArgs.value);
+        // variable = plain symbol string (e.g. "var_haskey") — compiler calls .replace() on it
+        // If caller passed a UUID, look up the symbol
+        if (rawArgs.variable && typeof rawArgs.variable === "object") {
+          rawArgs.variable = (rawArgs.variable as { value: string }).value;
+        }
+        rawArgs.value = wrapNum(rawArgs.value);
       }
       if (args.command === "EVENT_TEXT") {
         // text must be a plain string — GB Studio calls .match() on it directly
