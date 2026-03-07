@@ -142,6 +142,16 @@ export const scriptTools = {
         rawArgs.time = wrapNum(rawArgs.time);
       }
 
+      // Extract branch children from args if caller embedded them (true/false/trueEvents/falseEvents)
+      const branchKeys = ["true", "false", "trueEvents", "falseEvents"];
+      const childrenFromArgs: Record<string, ScriptEvent[]> = {};
+      branchKeys.forEach(k => {
+        if (Array.isArray(rawArgs[k])) {
+          childrenFromArgs[k.replace("Events", "")] = rawArgs[k] as ScriptEvent[];
+          delete rawArgs[k];
+        }
+      });
+
       // Build the event with proper IDs
       const event: ScriptEvent = {
         id: uuid(),
@@ -149,9 +159,10 @@ export const scriptTools = {
         args: rawArgs,
       };
 
-      if (args.children) {
+      const allChildren = { ...childrenFromArgs, ...(args.children || {}) };
+      if (Object.keys(allChildren).length > 0) {
         event.children = {};
-        for (const [key, events] of Object.entries(args.children)) {
+        for (const [key, events] of Object.entries(allChildren)) {
           event.children[key] = (events as ScriptEvent[]).map(e => {
             const normalized = { ...e, id: e.id || uuid() };
             return normalizeEvent(normalized);
