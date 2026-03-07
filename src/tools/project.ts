@@ -1,7 +1,33 @@
+/**
+ * @module tools/project
+ * @description Project management tools — create, open, save, and inspect GB Studio projects.
+ */
 import { createDefaultProject, setProject, requireProject, getProjectPath, saveProjectToDisk, loadProjectFromDisk, uuid } from "../project.js";
 import * as path from "path";
 
 export const projectTools = {
+  /**
+   * @description Create a new GB Studio project file with sensible defaults.
+   * Generates a `.gbsproj` file with a default background, sprite sheet, and palette.
+   * The first scene added will automatically become the start scene.
+   *
+   * @param args.name - Project name (used in the filename)
+   * @param args.author - Author name
+   * @param args.path - Directory path to create the project in
+   * @returns MCP response with the project path and default asset IDs
+   *
+   * @example
+   * // MCP call:
+   * {
+   *   "name": "create_project",
+   *   "arguments": {
+   *     "name": "MyRPG",
+   *     "author": "Grant",
+   *     "path": "C:/games/MyRPG"
+   *   }
+   * }
+   * // Returns: "Project created: C:/games/MyRPG/MyRPG.gbsproj\nDefault background ID: ...\nDefault sprite ID: ..."
+   */
   create_project: {
     description: "Create a new GB Studio project file with defaults",
     inputSchema: {
@@ -22,6 +48,22 @@ export const projectTools = {
     },
   },
 
+  /**
+   * @description Open an existing GB Studio project file from disk.
+   * Loads the `.gbsproj` JSON into memory for editing with other tools.
+   *
+   * @param args.path - Path to the .gbsproj file
+   * @returns MCP response with project name and summary stats
+   * @throws {Error} If the file doesn't exist or isn't valid JSON
+   *
+   * @example
+   * // MCP call:
+   * {
+   *   "name": "open_project",
+   *   "arguments": { "path": "C:/games/MyRPG/MyRPG.gbsproj" }
+   * }
+   * // Returns: "Opened project: MyRPG (3 scenes, 2 variables)"
+   */
   open_project: {
     description: "Open an existing GB Studio project file",
     inputSchema: {
@@ -37,6 +79,18 @@ export const projectTools = {
     },
   },
 
+  /**
+   * @description Save the current in-memory project state to the `.gbsproj` file on disk.
+   * Always save after making changes to persist them.
+   *
+   * @returns MCP response confirming the save path
+   * @throws {Error} If no project is loaded
+   *
+   * @example
+   * // MCP call:
+   * { "name": "save_project", "arguments": {} }
+   * // Returns: "Project saved to: C:/games/MyRPG/MyRPG.gbsproj"
+   */
   save_project: {
     description: "Save the current in-memory project to disk",
     inputSchema: { type: "object" as const, properties: {} },
@@ -46,6 +100,18 @@ export const projectTools = {
     },
   },
 
+  /**
+   * @description Get summary information about the current project, including
+   * counts of scenes, backgrounds, sprites, variables, and a list of all scenes.
+   *
+   * @returns MCP response with JSON project info
+   * @throws {Error} If no project is loaded
+   *
+   * @example
+   * // MCP call:
+   * { "name": "get_project_info", "arguments": {} }
+   * // Returns JSON: { "name": "MyRPG", "scenes": 3, "sceneList": [{ "id": "...", "name": "Town" }, ...] }
+   */
   get_project_info: {
     description: "Get info about the current project",
     inputSchema: { type: "object" as const, properties: {} },

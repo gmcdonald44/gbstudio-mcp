@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 18+](https://img.shields.io/badge/node-18%2B-brightgreen.svg)](https://nodejs.org/)
+![Tests](https://img.shields.io/badge/tests-26%2F26%20passing-brightgreen)
 
 **Describe a Game Boy game in plain English. Get a playable `.gbsproj` file.**
 
@@ -146,11 +147,43 @@ Here's what happens behind the scenes when you ask an AI to build a game:
 
 Open the `.gbsproj` in GB Studio, drop in your pixel art, and hit **Build ROM**!
 
-## How It Works
+## Architecture
+
+```
+Client (Claude, OpenClaw, etc.)
+   │
+   │  MCP Protocol (JSON-RPC 2.0 over stdio)
+   ▼
+Tool Router (src/index.ts)
+   │
+   ▼
+In-Memory Project State (src/project.ts)
+   │
+   │  save_project / open_project
+   ▼
+.gbsproj file on disk
+```
 
 The server keeps the project in memory. You create or open a project, make changes with the various tools, then save. The `.gbsproj` file is standard GB Studio JSON — fully compatible with the GB Studio editor.
 
 **Note:** Background and sprite assets are created as stubs. Add actual PNG files in GB Studio. The `build_rom` tool requires `gb-studio-cli` — without it, open the project in GB Studio to build.
+
+## Documentation
+
+- **[Getting Started](docs/getting-started.md)** — Install, configure, build your first game
+- **[Tool Reference](docs/tool-reference.md)** — All 20 tools with parameters and examples
+- **[GB Studio Format](docs/gb-studio-format.md)** — `.gbsproj` file structure reference
+- **[Script Events](docs/script-events.md)** — EVENT_* commands, patterns, and examples
+- **[Architecture](docs/architecture.md)** — Internals, how to add tools, contributing
+
+## Known Limitations
+
+- **Asset files** (PNG sprites/backgrounds) must still be added manually in GB Studio
+- **ROM compilation** requires GB Studio CLI or the desktop app
+- **In-memory state resets** when the server restarts — use `save_project` frequently
+- **No multiplayer/networking** support (it's Game Boy!)
+- **No collision editor** — use GB Studio's visual editor for collision tiles
+- **No undo** — inspect with `get_scene`/`get_script` before destructive changes
 
 ## Contributing
 
