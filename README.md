@@ -33,31 +33,27 @@ npm run build
 
 Add to your `claude_desktop_config.json`:
 
-```json
-{
-  "mcpServers": {
-    "gbstudio": {
-      "command": "node",
-      "args": ["/path/to/gbstudio-mcp/dist/index.js"]
-    }
-  }
-}
-```
-
-### OpenClaw
-
-Add to your OpenClaw MCP config (`openclaw.json`):
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "gbstudio": {
       "command": "node",
-      "args": ["/path/to/gbstudio-mcp/dist/index.js"]
+      "args": ["/absolute/path/to/gbstudio-mcp/dist/index.js"]
     }
   }
 }
 ```
+
+Restart Claude Desktop. The 20 gbstudio tools will appear in the 🔌 tools panel.
+
+📖 **Full setup guide with troubleshooting:** [docs/claude-desktop-setup.md](docs/claude-desktop-setup.md)
+
+### Other MCP Clients
+
+Works with any MCP-compatible client — Cursor, Zed, OpenClaw, or your own. Use the same config format with the absolute path to `dist/index.js`.
 
 ## Tools
 
@@ -132,6 +128,8 @@ Add to your OpenClaw MCP config (`openclaw.json`):
 "Wire up a conditional: if hasSword is true, the guard lets you pass"
 ```
 
+📚 **47 more prompts across 7 user personas** — sprite artists, developers, storytellers, educators, game jammers, and more: **[prompts/](prompts/README.md)**
+
 ## Walkthrough: Building a Simple RPG
 
 Here's what happens behind the scenes when you ask an AI to build a game:
@@ -170,11 +168,13 @@ The server keeps the project in memory. You create or open a project, make chang
 
 ## Documentation
 
+- **[Claude Desktop Setup](docs/claude-desktop-setup.md)** — Connect to Claude Desktop, verify tools, troubleshoot
 - **[Getting Started](docs/getting-started.md)** — Install, configure, build your first game
 - **[Tool Reference](docs/tool-reference.md)** — All 20 tools with parameters and examples
 - **[GB Studio Format](docs/gb-studio-format.md)** — `.gbsproj` file structure reference
 - **[Script Events](docs/script-events.md)** — EVENT_* commands, patterns, and examples
 - **[Architecture](docs/architecture.md)** — Internals, how to add tools, contributing
+- **[Prompt Examples](prompts/README.md)** — 47 natural-language prompts across 7 user personas
 
 ## Known Limitations
 
