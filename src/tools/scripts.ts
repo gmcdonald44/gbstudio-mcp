@@ -115,7 +115,10 @@ export const scriptTools = {
         rawArgs.value    = wrapNum(rawArgs.value);
       }
       if (args.command === "EVENT_TEXT") {
-        rawArgs.text = wrapStr(rawArgs.text);
+        // text must be a plain string — GB Studio calls .match() on it directly
+        if (rawArgs.text && typeof rawArgs.text === "object" && "value" in rawArgs.text) {
+          rawArgs.text = (rawArgs.text as { value: string }).value;
+        }
       }
       if (args.command === "EVENT_WAIT") {
         rawArgs.time = wrapNum(rawArgs.time);
