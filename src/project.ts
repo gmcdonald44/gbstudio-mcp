@@ -234,8 +234,10 @@ export interface Palette {
  * Contains all scenes, assets, variables, palettes, and settings.
  */
 export interface GBSProject {
-  /** Project format version */
-  _v: number;
+  /** Project format version (semver string, e.g. "4.1.0") */
+  _version: string;
+  /** Project format release (string, e.g. "1") */
+  _release: string;
   /** Project name */
   name: string;
   /** Author name */
@@ -332,7 +334,8 @@ export function createDefaultProject(name: string, author: string): GBSProject {
   const defaultPaletteId = uuid();
 
   return {
-    _v: 38,
+    _version: "4.1.0",
+    _release: "1",
     name,
     author,
     notes: "",
