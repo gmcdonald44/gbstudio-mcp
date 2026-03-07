@@ -361,7 +361,7 @@ Append a script event to any entity's script array. This is the core tool for ga
 | `target` | string | ✅ | "scene", "actor", or "trigger" |
 | `targetId` | string | ✅ | UUID of the target entity |
 | `scriptType` | string | ✅ | Script array: "script", "startScript", "updateScript", "hit1Script", "leaveScript", etc. |
-| `command` | string | ✅ | Event command (e.g. "EVENT_DIALOGUE") |
+| `command` | string | ✅ | Event command (e.g. "EVENT_TEXT", "EVENT_SWITCH_SCENE") |
 | `args` | object | ❌ | Command-specific arguments |
 | `children` | object | ❌ | Child branches for conditionals (`{ "true": [...], "false": [...] }`) |
 | `sceneId` | string | ❌* | Scene UUID (*required* for actor/trigger targets) |
@@ -374,7 +374,7 @@ Append a script event to any entity's script array. This is the core tool for ga
     "targetId": "actor-uuid",
     "sceneId": "scene-uuid",
     "scriptType": "script",
-    "command": "EVENT_DIALOGUE",
+    "command": "EVENT_TEXT",
     "args": { "text": "Greetings, traveler!" }
   }
 }

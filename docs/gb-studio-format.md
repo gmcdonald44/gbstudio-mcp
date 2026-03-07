@@ -45,8 +45,8 @@ Every entity (scene, actor, trigger, variable, background, sprite, palette, scri
 References between entities use these UUIDs. For example:
 - A scene's `backgroundId` references a background's `id`
 - An actor's `spriteSheetId` references a sprite sheet's `id`
-- An `EVENT_SCENE_SWITCH` command's `args.sceneId` references a scene's `id`
-- An `EVENT_IF_VARIABLE_TRUE` command's `args.variableId` references a variable's `id`
+- An `EVENT_SWITCH_SCENE` command's `args.sceneId` references a scene's `id`
+- An `EVENT_IF_TRUE` command's `args.variable` references a variable's `id`
 
 ## Scene Structure
 
@@ -241,7 +241,7 @@ See [Script Events](script-events.md) for the full reference. The basic structur
 ```json
 {
   "id": "uuid",
-  "command": "EVENT_DIALOGUE",
+  "command": "EVENT_TEXT",
   "args": { "text": "Hello!" },
   "children": {}
 }

@@ -22,7 +22,7 @@ import * as crypto from "crypto";
  * @example
  * const dialogueEvent: ScriptEvent = {
  *   id: "a1b2c3d4-...",
- *   command: "EVENT_DIALOGUE",
+ *   command: "EVENT_TEXT",
  *   args: { text: "Hello, adventurer!" }
  * };
  *
@@ -30,18 +30,18 @@ import * as crypto from "crypto";
  * // Conditional event with true/false branches
  * const conditional: ScriptEvent = {
  *   id: "e5f6g7h8-...",
- *   command: "EVENT_IF_VARIABLE_TRUE",
- *   args: { variableId: "var-uuid" },
+ *   command: "EVENT_IF_TRUE",
+ *   args: { variable: "var-uuid" },
  *   children: {
- *     true: [{ id: "...", command: "EVENT_DIALOGUE", args: { text: "You have the key!" } }],
- *     false: [{ id: "...", command: "EVENT_DIALOGUE", args: { text: "Come back with the key." } }]
+ *     true: [{ id: "...", command: "EVENT_TEXT", args: { text: "You have the key!" } }],
+ *     false: [{ id: "...", command: "EVENT_TEXT", args: { text: "Come back with the key." } }]
  *   }
  * };
  */
 export interface ScriptEvent {
   /** Unique identifier (UUID v4) */
   id: string;
-  /** Event command name, e.g. "EVENT_DIALOGUE", "EVENT_SCENE_SWITCH" */
+  /** Event command name, e.g. "EVENT_TEXT", "EVENT_SWITCH_SCENE" */
   command: string;
   /** Command-specific arguments */
   args?: Record<string, any>;
@@ -113,7 +113,7 @@ export interface Actor {
  *   id: "uuid-here",
  *   name: "Door to Dungeon",
  *   x: 10, y: 15, width: 2, height: 1,
- *   script: [{ id: "...", command: "EVENT_SCENE_SWITCH", args: { sceneId: "dungeon-uuid", x: 1, y: 1, direction: "down", fadeSpeed: 2 } }],
+ *   script: [{ id: "...", command: "EVENT_SWITCH_SCENE", args: { sceneId: "dungeon-uuid", x: 1, y: 1, direction: "down", fadeSpeed: 2 } }],
  *   leaveScript: []
  * };
  */

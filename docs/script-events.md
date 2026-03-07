@@ -2,6 +2,8 @@
 
 Script events are the building blocks of game logic in GB Studio. Each event is a JSON object with a `command`, `args`, and optionally `children` (for branching logic).
 
+> **Note:** This reference covers GB Studio 4.x event IDs. Older tutorials may use deprecated 1.x/2.x names (e.g. `EVENT_DIALOGUE` → now `EVENT_TEXT`).
+
 ## Event Structure
 
 ```json
@@ -27,13 +29,13 @@ Events in a script array execute **sequentially**, top to bottom.
 
 ## Dialogue & Text
 
-### `EVENT_DIALOGUE`
+### `EVENT_TEXT`
 
 Display a text dialogue box.
 
 ```json
 {
-  "command": "EVENT_DIALOGUE",
+  "command": "EVENT_TEXT",
   "args": {
     "text": "Welcome to the village!\nSpeak to the elder for your quest."
   }
@@ -57,10 +59,10 @@ Show a yes/no choice and branch based on the answer.
   },
   "children": {
     "true": [
-      { "id": "uuid", "command": "EVENT_DIALOGUE", "args": { "text": "Great choice!" } }
+      { "id": "uuid", "command": "EVENT_TEXT", "args": { "text": "Great choice!" } }
     ],
     "false": [
-      { "id": "uuid", "command": "EVENT_DIALOGUE", "args": { "text": "Maybe next time." } }
+      { "id": "uuid", "command": "EVENT_TEXT", "args": { "text": "Maybe next time." } }
     ]
   }
 }
@@ -79,7 +81,7 @@ Show a multi-option menu and store the selection in a variable.
 {
   "command": "EVENT_MENU",
   "args": {
-    "variableId": "var-uuid",
+    "variable": "var-uuid",
     "options": ["Buy Sword", "Buy Shield", "Leave"]
   }
 }
@@ -89,13 +91,13 @@ Show a multi-option menu and store the selection in a variable.
 
 ## Scene Navigation
 
-### `EVENT_SCENE_SWITCH`
+### `EVENT_SWITCH_SCENE`
 
 Transition to a different scene.
 
 ```json
 {
-  "command": "EVENT_SCENE_SWITCH",
+  "command": "EVENT_SWITCH_SCENE",
   "args": {
     "sceneId": "target-scene-uuid",
     "x": 5,
@@ -118,20 +120,28 @@ Transition to a different scene.
 
 ## Variables & Conditionals
 
-### `EVENT_SET_VARIABLE_TRUE`
+### `EVENT_SET_TRUE`
 
-Set a boolean variable to true.
+Set a boolean variable to true (non-zero).
 
 ```json
-{ "command": "EVENT_SET_VARIABLE_TRUE", "args": { "variableId": "var-uuid" } }
+{ "command": "EVENT_SET_TRUE", "args": { "variable": "var-uuid" } }
 ```
 
-### `EVENT_SET_VARIABLE_FALSE`
+### `EVENT_SET_FALSE`
 
-Set a boolean variable to false.
+Set a boolean variable to false (zero).
 
 ```json
-{ "command": "EVENT_SET_VARIABLE_FALSE", "args": { "variableId": "var-uuid" } }
+{ "command": "EVENT_SET_FALSE", "args": { "variable": "var-uuid" } }
+```
+
+### `EVENT_SET_VALUE`
+
+Set a variable to a specific numeric value.
+
+```json
+{ "command": "EVENT_SET_VALUE", "args": { "variable": "var-uuid", "value": 42 } }
 ```
 
 ### `EVENT_VARIABLE_MATH`
@@ -142,8 +152,9 @@ Perform math on a variable.
 {
   "command": "EVENT_VARIABLE_MATH",
   "args": {
-    "variableId": "var-uuid",
+    "vectorX": "var-uuid",
     "operation": "add",
+    "other": "val",
     "value": 10
   }
 }
@@ -151,18 +162,20 @@ Perform math on a variable.
 
 | Arg | Type | Description |
 |-----|------|-------------|
-| `variableId` | string | Variable UUID |
+| `vectorX` | string | Variable UUID to modify |
 | `operation` | string | `"set"`, `"add"`, `"sub"`, `"mul"`, `"div"`, `"mod"` |
-| `value` | number | Operand value |
+| `other` | string | `"val"` for literal value, `"var"` for another variable |
+| `value` | number | Operand value (when `other` is `"val"`) |
+| `vectorY` | string | Second variable UUID (when `other` is `"var"`) |
 
-### `EVENT_IF_VARIABLE_TRUE`
+### `EVENT_IF_TRUE`
 
-Branch based on whether a variable is true.
+Branch based on whether a variable is non-zero (true).
 
 ```json
 {
-  "command": "EVENT_IF_VARIABLE_TRUE",
-  "args": { "variableId": "var-uuid" },
+  "command": "EVENT_IF_TRUE",
+  "args": { "variable": "var-uuid" },
   "children": {
     "true": [ /* events if true */ ],
     "false": [ /* events if false */ ]
@@ -170,17 +183,17 @@ Branch based on whether a variable is true.
 }
 ```
 
-### `EVENT_IF_VARIABLE_VALUE`
+### `EVENT_IF_VALUE`
 
 Branch based on comparing a variable to a value.
 
 ```json
 {
-  "command": "EVENT_IF_VARIABLE_VALUE",
+  "command": "EVENT_IF_VALUE",
   "args": {
-    "variableId": "var-uuid",
+    "variable": "var-uuid",
     "operator": ">=",
-    "value": 10
+    "comparator": 10
   },
   "children": {
     "true": [ /* events if condition met */ ],
@@ -191,7 +204,9 @@ Branch based on comparing a variable to a value.
 
 | Arg | Type | Description |
 |-----|------|-------------|
+| `variable` | string | Variable UUID to compare |
 | `operator` | string | `"=="`, `"!="`, `"<"`, `">"`, `"<="`, `">="` |
+| `comparator` | number | Value to compare against |
 
 ---
 
@@ -230,13 +245,13 @@ Instantly teleport an actor (no walking animation).
 }
 ```
 
-### `EVENT_ACTOR_HIDE` / `EVENT_ACTOR_SHOW`
+### `EVENT_ACTOR_DEACTIVATE` / `EVENT_ACTOR_ACTIVATE`
 
-Toggle actor visibility.
+Toggle actor visibility (deactivate hides, activate shows).
 
 ```json
-{ "command": "EVENT_ACTOR_HIDE", "args": { "actorId": "actor-uuid" } }
-{ "command": "EVENT_ACTOR_SHOW", "args": { "actorId": "actor-uuid" } }
+{ "command": "EVENT_ACTOR_DEACTIVATE", "args": { "actorId": "actor-uuid" } }
+{ "command": "EVENT_ACTOR_ACTIVATE", "args": { "actorId": "actor-uuid" } }
 ```
 
 ---
@@ -268,13 +283,13 @@ Move the camera to a tile position.
 ### `EVENT_FADE_IN` / `EVENT_FADE_OUT`
 
 ```json
-{ "command": "EVENT_FADE_IN", "args": { "fadeSpeed": 2 } }
-{ "command": "EVENT_FADE_OUT", "args": { "fadeSpeed": 2 } }
+{ "command": "EVENT_FADE_IN", "args": { "speed": 2 } }
+{ "command": "EVENT_FADE_OUT", "args": { "speed": 2 } }
 ```
 
 | Arg | Type | Description |
 |-----|------|-------------|
-| `fadeSpeed` | number | 1-6 (1 = fastest) |
+| `speed` | number | 1-6 (1 = fastest) |
 
 ### `EVENT_OVERLAY_SHOW` / `EVENT_OVERLAY_HIDE`
 
@@ -303,13 +318,13 @@ Pause script execution.
 
 ## Sound & Music
 
-### `EVENT_SOUND_PLAY`
+### `EVENT_SOUND_PLAY_EFFECT`
 
 Play a sound effect.
 
 ```json
 {
-  "command": "EVENT_SOUND_PLAY",
+  "command": "EVENT_SOUND_PLAY_EFFECT",
   "args": { "type": "beep", "pitch": 4, "duration": 0.5 }
 }
 ```
@@ -335,6 +350,25 @@ Change the player's sprite sheet.
 
 ---
 
+## Event Name Migration (1.x → 4.x)
+
+If you're referencing older GB Studio tutorials, here's the mapping:
+
+| Old Name (1.x/2.x) | Current Name (4.x) |
+|---|---|
+| `EVENT_DIALOGUE` | `EVENT_TEXT` |
+| `EVENT_SCENE_SWITCH` | `EVENT_SWITCH_SCENE` |
+| `EVENT_VARIABLE_SET` | `EVENT_SET_VALUE` |
+| `EVENT_SET_VARIABLE_TRUE` | `EVENT_SET_TRUE` |
+| `EVENT_SET_VARIABLE_FALSE` | `EVENT_SET_FALSE` |
+| `EVENT_IF_VARIABLE_TRUE` | `EVENT_IF_TRUE` |
+| `EVENT_IF_VARIABLE_VALUE` | `EVENT_IF_VALUE` |
+| `EVENT_SOUND_PLAY` | `EVENT_SOUND_PLAY_EFFECT` |
+| `EVENT_ACTOR_HIDE` | `EVENT_ACTOR_DEACTIVATE` |
+| `EVENT_ACTOR_SHOW` | `EVENT_ACTOR_ACTIVATE` |
+
+---
+
 ## Common Patterns
 
 ### NPC Dialogue Loop
@@ -344,14 +378,14 @@ An NPC that says different things based on game state:
 ```json
 [
   {
-    "id": "1", "command": "EVENT_IF_VARIABLE_TRUE",
-    "args": { "variableId": "talked-to-elder-uuid" },
+    "id": "1", "command": "EVENT_IF_TRUE",
+    "args": { "variable": "talked-to-elder-uuid" },
     "children": {
       "true": [
-        { "id": "2", "command": "EVENT_DIALOGUE", "args": { "text": "Good luck on your quest!" } }
+        { "id": "2", "command": "EVENT_TEXT", "args": { "text": "Good luck on your quest!" } }
       ],
       "false": [
-        { "id": "3", "command": "EVENT_DIALOGUE", "args": { "text": "You should talk to\nthe village elder." } }
+        { "id": "3", "command": "EVENT_TEXT", "args": { "text": "You should talk to\nthe village elder." } }
       ]
     }
   }
@@ -364,9 +398,9 @@ A trigger that teleports the player to another scene:
 
 ```json
 [
-  { "id": "1", "command": "EVENT_FADE_OUT", "args": { "fadeSpeed": 2 } },
+  { "id": "1", "command": "EVENT_FADE_OUT", "args": { "speed": 2 } },
   {
-    "id": "2", "command": "EVENT_SCENE_SWITCH",
+    "id": "2", "command": "EVENT_SWITCH_SCENE",
     "args": { "sceneId": "dungeon-uuid", "x": 9, "y": 13, "direction": "up", "fadeSpeed": 2 }
   }
 ]
@@ -379,15 +413,15 @@ An actor that gives the player an item when interacted with:
 ```json
 [
   {
-    "id": "1", "command": "EVENT_IF_VARIABLE_TRUE",
-    "args": { "variableId": "has-key-uuid" },
+    "id": "1", "command": "EVENT_IF_TRUE",
+    "args": { "variable": "has-key-uuid" },
     "children": {
       "true": [
-        { "id": "2", "command": "EVENT_DIALOGUE", "args": { "text": "You already have\nthe key." } }
+        { "id": "2", "command": "EVENT_TEXT", "args": { "text": "You already have\nthe key." } }
       ],
       "false": [
-        { "id": "3", "command": "EVENT_DIALOGUE", "args": { "text": "You found the\nDungeon Key!" } },
-        { "id": "4", "command": "EVENT_SET_VARIABLE_TRUE", "args": { "variableId": "has-key-uuid" } }
+        { "id": "3", "command": "EVENT_TEXT", "args": { "text": "You found the\nDungeon Key!" } },
+        { "id": "4", "command": "EVENT_SET_TRUE", "args": { "variable": "has-key-uuid" } }
       ]
     }
   }
@@ -401,15 +435,15 @@ A guard NPC that blocks passage unless the player has a specific item:
 ```json
 [
   {
-    "id": "1", "command": "EVENT_IF_VARIABLE_TRUE",
-    "args": { "variableId": "has-sword-uuid" },
+    "id": "1", "command": "EVENT_IF_TRUE",
+    "args": { "variable": "has-sword-uuid" },
     "children": {
       "true": [
-        { "id": "2", "command": "EVENT_DIALOGUE", "args": { "text": "A fine blade!\nYou may pass." } },
+        { "id": "2", "command": "EVENT_TEXT", "args": { "text": "A fine blade!\nYou may pass." } },
         { "id": "3", "command": "EVENT_ACTOR_MOVE_TO", "args": { "actorId": "guard-uuid", "x": 2, "y": 5 } }
       ],
       "false": [
-        { "id": "4", "command": "EVENT_DIALOGUE", "args": { "text": "None shall pass\nwithout a weapon!" } }
+        { "id": "4", "command": "EVENT_TEXT", "args": { "text": "None shall pass\nwithout a weapon!" } }
       ]
     }
   }
@@ -422,29 +456,29 @@ A shopkeeper with a purchase menu:
 
 ```json
 [
-  { "id": "1", "command": "EVENT_DIALOGUE", "args": { "text": "Welcome to my shop!" } },
+  { "id": "1", "command": "EVENT_TEXT", "args": { "text": "Welcome to my shop!" } },
   {
     "id": "2", "command": "EVENT_CHOICE",
     "args": { "trueText": "Buy Sword", "falseText": "Leave" },
     "children": {
       "true": [
         {
-          "id": "3", "command": "EVENT_IF_VARIABLE_VALUE",
-          "args": { "variableId": "gold-uuid", "operator": ">=", "value": 50 },
+          "id": "3", "command": "EVENT_IF_VALUE",
+          "args": { "variable": "gold-uuid", "operator": ">=", "comparator": 50 },
           "children": {
             "true": [
-              { "id": "4", "command": "EVENT_VARIABLE_MATH", "args": { "variableId": "gold-uuid", "operation": "sub", "value": 50 } },
-              { "id": "5", "command": "EVENT_SET_VARIABLE_TRUE", "args": { "variableId": "has-sword-uuid" } },
-              { "id": "6", "command": "EVENT_DIALOGUE", "args": { "text": "Here's your sword!\nUse it wisely." } }
+              { "id": "4", "command": "EVENT_VARIABLE_MATH", "args": { "vectorX": "gold-uuid", "operation": "sub", "other": "val", "value": 50 } },
+              { "id": "5", "command": "EVENT_SET_TRUE", "args": { "variable": "has-sword-uuid" } },
+              { "id": "6", "command": "EVENT_TEXT", "args": { "text": "Here's your sword!\nUse it wisely." } }
             ],
             "false": [
-              { "id": "7", "command": "EVENT_DIALOGUE", "args": { "text": "You don't have\nenough gold!" } }
+              { "id": "7", "command": "EVENT_TEXT", "args": { "text": "You don't have\nenough gold!" } }
             ]
           }
         }
       ],
       "false": [
-        { "id": "8", "command": "EVENT_DIALOGUE", "args": { "text": "Come back anytime!" } }
+        { "id": "8", "command": "EVENT_TEXT", "args": { "text": "Come back anytime!" } }
       ]
     }
   }

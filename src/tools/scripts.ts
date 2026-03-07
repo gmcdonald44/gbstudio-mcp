@@ -5,20 +5,22 @@
  * Scripts are arrays of {@link ScriptEvent} objects that define game logic. Each event has a
  * `command` (e.g. `EVENT_DIALOGUE`, `EVENT_SCENE_SWITCH`) and `args` specific to that command.
  *
- * **Supported GB Studio event commands include:**
- * - `EVENT_DIALOGUE` — Show text dialogue (`args: { text: string }`)
- * - `EVENT_SCENE_SWITCH` — Transition to another scene (`args: { sceneId, x, y, direction, fadeSpeed }`)
- * - `EVENT_IF_VARIABLE_TRUE` — Conditional branch on variable (`args: { variableId }`, `children: { true: [...], false: [...] }`)
- * - `EVENT_SET_VARIABLE_TRUE` / `EVENT_SET_VARIABLE_FALSE` — Set a variable (`args: { variableId }`)
- * - `EVENT_VARIABLE_MATH` — Math on variables (`args: { variableId, operation, value }`)
+ * **Supported GB Studio 4.x event commands include:**
+ * - `EVENT_TEXT` — Show text dialogue (`args: { text: string }`)
+ * - `EVENT_SWITCH_SCENE` — Transition to another scene (`args: { sceneId, x, y, direction, fadeSpeed }`)
+ * - `EVENT_IF_TRUE` — Conditional branch on variable being true (`args: { variable }`, `children: { true: [...], false: [...] }`)
+ * - `EVENT_IF_VALUE` — Conditional branch comparing variable to value (`args: { variable, operator, comparator }`, `children: { true: [...], false: [...] }`)
+ * - `EVENT_SET_TRUE` / `EVENT_SET_FALSE` — Set a variable to true/false (`args: { variable }`)
+ * - `EVENT_SET_VALUE` — Set a variable to a numeric value (`args: { variable, value }`)
+ * - `EVENT_VARIABLE_MATH` — Math on variables (`args: { vectorX, operation, other, vectorY, value }`)
  * - `EVENT_ACTOR_MOVE_TO` — Move an actor (`args: { actorId, x, y }`)
  * - `EVENT_ACTOR_SET_DIRECTION` — Change actor direction (`args: { actorId, direction }`)
  * - `EVENT_CAMERA_MOVE_TO` — Move camera (`args: { x, y, speed }`)
  * - `EVENT_WAIT` — Wait frames (`args: { time }`)
- * - `EVENT_FADE_IN` / `EVENT_FADE_OUT` — Screen fade (`args: { fadeSpeed }`)
- * - `EVENT_SOUND_PLAY` — Play sound effect (`args: { type, pitch, duration }`)
+ * - `EVENT_FADE_IN` / `EVENT_FADE_OUT` — Screen fade (`args: { speed }`)
+ * - `EVENT_SOUND_PLAY_EFFECT` — Play sound effect (`args: { type, pitch, duration }`)
  * - `EVENT_MUSIC_PLAY` / `EVENT_MUSIC_STOP` — Music control (`args: { musicId }`)
- * - `EVENT_MENU` — Show a menu (`args: { options, variableId }`)
+ * - `EVENT_MENU` — Show a menu (`args: { options, variable }`)
  * - `EVENT_CHOICE` — Show a choice prompt (`args: { trueText, falseText }`, `children: { true, false }`)
  * - `EVENT_OVERLAY_SHOW` / `EVENT_OVERLAY_HIDE` — Overlay control
  * - `EVENT_PLAYER_SET_SPRITE` — Change player sprite (`args: { spriteSheetId }`)
@@ -52,7 +54,7 @@ export const scriptTools = {
    *     "targetId": "actor-uuid",
    *     "sceneId": "scene-uuid",
    *     "scriptType": "script",
-   *     "command": "EVENT_DIALOGUE",
+   *     "command": "EVENT_TEXT",
    *     "args": { "text": "Welcome to my shop!\nWould you like to buy something?" }
    *   }
    * }
@@ -66,7 +68,7 @@ export const scriptTools = {
    *     "targetId": "trigger-uuid",
    *     "sceneId": "scene-uuid",
    *     "scriptType": "script",
-   *     "command": "EVENT_SCENE_SWITCH",
+   *     "command": "EVENT_SWITCH_SCENE",
    *     "args": { "sceneId": "dungeon-uuid", "x": 5, "y": 1, "direction": "down", "fadeSpeed": 2 }
    *   }
    * }
@@ -80,11 +82,11 @@ export const scriptTools = {
    *     "targetId": "guard-uuid",
    *     "sceneId": "scene-uuid",
    *     "scriptType": "script",
-   *     "command": "EVENT_IF_VARIABLE_TRUE",
-   *     "args": { "variableId": "hasSword-uuid" },
+   *     "command": "EVENT_IF_TRUE",
+   *     "args": { "variable": "hasSword-uuid" },
    *     "children": {
-   *       "true": [{ "id": "uuid", "command": "EVENT_DIALOGUE", "args": { "text": "You may pass." } }],
-   *       "false": [{ "id": "uuid", "command": "EVENT_DIALOGUE", "args": { "text": "You need a sword!" } }]
+   *       "true": [{ "id": "uuid", "command": "EVENT_TEXT", "args": { "text": "You may pass." } }],
+   *       "false": [{ "id": "uuid", "command": "EVENT_TEXT", "args": { "text": "You need a sword!" } }]
    *     }
    *   }
    * }
@@ -97,7 +99,7 @@ export const scriptTools = {
         target: { type: "string", enum: ["scene", "actor", "trigger"], description: "Target type" },
         targetId: { type: "string", description: "UUID of the target (scene/actor/trigger)" },
         scriptType: { type: "string", description: "Script array name: script, startScript, updateScript, hit1Script, etc." },
-        command: { type: "string", description: "Event command, e.g. EVENT_DIALOGUE" },
+        command: { type: "string", description: "Event command, e.g. EVENT_TEXT, EVENT_SWITCH_SCENE" },
         args: { type: "object", description: "Event arguments" },
         children: { type: "object", description: "Child script branches (for conditionals)" },
         sceneId: { type: "string", description: "Scene UUID (required for actor/trigger targets)" },
