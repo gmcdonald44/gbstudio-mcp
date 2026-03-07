@@ -119,8 +119,9 @@ export const scriptTools = {
             : String(rawArgs.variable);
           const p = requireProject();
           const idx = p.variables.findIndex(
-            (v, i) => v.id === raw || v.symbol === raw || v.name === raw ||
-                      v.name.toLowerCase() === raw.toLowerCase() || String(i) === raw
+            (v: { id: string; symbol: string; name: string }, i: number) =>
+              v.id === raw || v.symbol === raw || v.name === raw ||
+              v.name.toLowerCase() === raw.toLowerCase() || String(i) === raw
           );
           rawArgs.variable = idx >= 0 ? String(idx) : raw;
         }
