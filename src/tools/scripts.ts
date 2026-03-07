@@ -95,14 +95,30 @@ export const scriptTools = {
     }) => {
       const { owner, scriptKey } = resolveScriptTarget(args.target, args.targetId, args.scriptType, args.sceneId);
 
-      // Normalize args for commands that require typed values
+      // Normalize args — GB Studio 4.x requires typed value objects for most fields
       const rawArgs = { ...(args.args || {}) };
+      const wrapNum = (v: unknown) => typeof v === "number" ? { type: "number", value: v } : v;
+      const wrapStr = (v: unknown) => typeof v === "string" ? { type: "string", value: v } : v;
+      const wrapVar = (v: unknown) => typeof v === "string" ? { type: "variable", value: v } : v;
+      const wrapDir = (v: unknown) => typeof v === "string" ? { type: "direction", value: v } : v;
+      const wrapScene = (v: unknown) => typeof v === "string" ? { type: "scene", value: v } : v;
+
       if (args.command === "EVENT_SWITCH_SCENE") {
-        if (typeof rawArgs.sceneId === "string") rawArgs.sceneId = { type: "scene", value: rawArgs.sceneId };
-        if (typeof rawArgs.x === "number") rawArgs.x = { type: "number", value: rawArgs.x };
-        if (typeof rawArgs.y === "number") rawArgs.y = { type: "number", value: rawArgs.y };
-        if (typeof rawArgs.fadeSpeed === "number") rawArgs.fadeSpeed = { type: "number", value: rawArgs.fadeSpeed };
-        if (typeof rawArgs.direction === "string") rawArgs.direction = { type: "direction", value: rawArgs.direction };
+        rawArgs.sceneId   = wrapScene(rawArgs.sceneId);
+        rawArgs.x         = wrapNum(rawArgs.x);
+        rawArgs.y         = wrapNum(rawArgs.y);
+        rawArgs.fadeSpeed = wrapNum(rawArgs.fadeSpeed);
+        rawArgs.direction = wrapDir(rawArgs.direction);
+      }
+      if (args.command === "EVENT_SET_VALUE" || args.command === "EVENT_IF") {
+        rawArgs.variable = wrapVar(rawArgs.variable);
+        rawArgs.value    = wrapNum(rawArgs.value);
+      }
+      if (args.command === "EVENT_TEXT") {
+        rawArgs.text = wrapStr(rawArgs.text);
+      }
+      if (args.command === "EVENT_WAIT") {
+        rawArgs.time = wrapNum(rawArgs.time);
       }
 
       // Build the event with proper IDs
