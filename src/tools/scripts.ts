@@ -110,9 +110,13 @@ export const scriptTools = {
         rawArgs.fadeSpeed = wrapNum(rawArgs.fadeSpeed);
         rawArgs.direction = wrapDir(rawArgs.direction);
       }
-      if (args.command === "EVENT_SET_VALUE" || args.command === "EVENT_IF") {
-        // variable = numeric string index ("0", "1", ...) into the project variables array
-        // Caller may pass UUID, symbol, name, or index — resolve all to index string
+      // Normalize deprecated EVENT_IF / EVENT_IF_VALUE → EVENT_IF_SCRIPT_VALUE
+      if (args.command === "EVENT_IF" || args.command === "EVENT_IF_VALUE") {
+        args = { ...args, command: "EVENT_IF_SCRIPT_VALUE" };
+      }
+      if (args.command === "EVENT_SET_VALUE" || args.command === "EVENT_IF" ||
+          args.command === "EVENT_IF_VALUE" || args.command === "EVENT_IF_SCRIPT_VALUE") {
+        // variable = numeric string index into project.variables array
         if (rawArgs.variable !== undefined) {
           const raw = typeof rawArgs.variable === "object"
             ? String((rawArgs.variable as { value: string }).value || "")
@@ -125,6 +129,7 @@ export const scriptTools = {
           );
           rawArgs.variable = idx >= 0 ? String(idx) : raw;
         }
+        if (!rawArgs.operator) rawArgs.operator = "==";
         rawArgs.value = wrapNum(rawArgs.value);
       }
       if (args.command === "EVENT_TEXT") {
