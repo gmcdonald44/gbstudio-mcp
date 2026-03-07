@@ -5,3 +5,8 @@ dist/
 *.gbc
 assets/
 .env
+
+build-game.mjs
+test_comp.png
+test_jimp.png
+test-output/
