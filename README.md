@@ -128,7 +128,7 @@ Works with any MCP-compatible client — Cursor, Zed, OpenClaw, or your own. Use
 "Wire up a conditional: if hasSword is true, the guard lets you pass"
 ```
 
-📚 **47 more prompts across 7 user personas** — sprite artists, developers, storytellers, educators, game jammers, and more: **[prompts/](prompts/README.md)**
+📚 **12 prompts in two buckets** — sprite artists, developers, storytellers, educators, game jammers, and more: **[prompts/](prompts/README.md)**
 
 ## Walkthrough: Building a Simple RPG
 
@@ -174,7 +174,7 @@ The server keeps the project in memory. You create or open a project, make chang
 - **[GB Studio Format](docs/gb-studio-format.md)** — `.gbsproj` file structure reference
 - **[Script Events](docs/script-events.md)** — EVENT_* commands, patterns, and examples
 - **[Architecture](docs/architecture.md)** — Internals, how to add tools, contributing
-- **[Prompt Examples](prompts/README.md)** — 47 natural-language prompts across 7 user personas
+- **[Prompt Examples](prompts/README.md)** — 12 prompts across two buckets (has art / no art)
 
 ## Known Limitations
 
