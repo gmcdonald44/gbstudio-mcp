@@ -1,0 +1,29 @@
+{
+  "name": "gbstudio-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for building Game Boy games with GB Studio using natural language",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["mcp", "gameboy", "gb-studio", "game-development", "claude", "ai"],
+  "author": "Grant McDonald",
+  "license": "MIT",
+  "homepage": "https://github.com/gmcdonald44/gbstudio-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gmcdonald44/gbstudio-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gmcdonald44/gbstudio-mcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  }
+}
