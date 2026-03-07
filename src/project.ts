@@ -332,7 +332,7 @@ export function createDefaultProject(name: string, author: string): GBSProject {
   const defaultPaletteId = uuid();
 
   return {
-    _v: 21,
+    _v: 38,
     name,
     author,
     notes: "",
