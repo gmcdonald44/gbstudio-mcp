@@ -111,10 +111,18 @@ export const scriptTools = {
         rawArgs.direction = wrapDir(rawArgs.direction);
       }
       if (args.command === "EVENT_SET_VALUE" || args.command === "EVENT_IF") {
-        // variable = plain symbol string (e.g. "var_haskey") — compiler calls .replace() on it
-        // If caller passed a UUID, look up the symbol
-        if (rawArgs.variable && typeof rawArgs.variable === "object") {
-          rawArgs.variable = (rawArgs.variable as { value: string }).value;
+        // variable = numeric string index ("0", "1", ...) into the project variables array
+        // Caller may pass UUID, symbol, name, or index — resolve all to index string
+        if (rawArgs.variable !== undefined) {
+          const raw = typeof rawArgs.variable === "object"
+            ? String((rawArgs.variable as { value: string }).value || "")
+            : String(rawArgs.variable);
+          const p = requireProject();
+          const idx = p.variables.findIndex(
+            (v, i) => v.id === raw || v.symbol === raw || v.name === raw ||
+                      v.name.toLowerCase() === raw.toLowerCase() || String(i) === raw
+          );
+          rawArgs.variable = idx >= 0 ? String(idx) : raw;
         }
         rawArgs.value = wrapNum(rawArgs.value);
       }
