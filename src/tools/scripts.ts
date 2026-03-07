@@ -57,7 +57,7 @@
  * - EVENT_COMMENT — Developer comment (no-op)
  *   args: { text: string }
  */
-import { resolveScriptTarget, uuid } from "../project.js";
+import { resolveScriptTarget, uuid, requireProject } from "../project.js";
 import type { ScriptEvent } from "../project.js";
 
 /** Ensure script events with children have __type: "event" */
