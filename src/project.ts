@@ -592,13 +592,19 @@ export function saveProjectToDisk(): string {
   }
 
   // 7. Write background .gbsres files
+  const bgDir = path.join(projectDir, "project", "backgrounds");
+  fs.mkdirSync(bgDir, { recursive: true });
   for (const bg of project.backgrounds) {
-    writeJson(path.join(projectDir, "assets", "backgrounds", `${bg.filename}.gbsres`), bg);
+    const slug = bg.filename.replace(/\.png$/i, "").replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+    writeJson(path.join(bgDir, `${slug}.gbsres`), bg);
   }
 
   // 8. Write sprite .gbsres files
+  const spriteDir = path.join(projectDir, "project", "sprites");
+  fs.mkdirSync(spriteDir, { recursive: true });
   for (const sprite of project.spriteSheets) {
-    writeJson(path.join(projectDir, "assets", "sprites", `${sprite.filename}.gbsres`), sprite);
+    const slug = sprite.filename.replace(/\.png$/i, "").replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+    writeJson(path.join(spriteDir, `${slug}.gbsres`), sprite);
   }
 
   return currentProjectPath;
