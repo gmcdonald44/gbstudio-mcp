@@ -40,19 +40,30 @@ export const actorTools = {
         persistent: { type: "boolean", description: "Whether actor persists across scenes (default: false)" },
         collisionGroup: { type: "string", description: "Collision group (default: empty)" },
       },
-      required: ["sceneId", "name", "x", "y", "spriteSheetId"],
+      required: ["sceneId", "name", "x", "y"],
     },
     handler: async (args: {
-      sceneId: string; name: string; x: number; y: number; spriteSheetId: string;
+      sceneId: string; name: string; x: number; y: number; spriteSheetId?: string;
       direction?: string; moveSpeed?: number; animSpeed?: number;
       animate?: boolean; persistent?: boolean; collisionGroup?: string;
     }) => {
+      const p = requireProject();
       const scene = findScene(args.sceneId);
+
+      // Default to first sprite sheet if not specified
+      let spriteSheetId = args.spriteSheetId;
+      if (!spriteSheetId) {
+        if (p.spriteSheets.length === 0) {
+          throw new Error("No sprite sheets in project. Add a sprite sheet first or provide spriteSheetId.");
+        }
+        spriteSheetId = p.spriteSheets[0].id;
+      }
+
       const actor = createActor({
         name: args.name,
         x: args.x,
         y: args.y,
-        spriteSheetId: args.spriteSheetId,
+        spriteSheetId,
         direction: args.direction,
         _index: scene.actors.length,
       });
